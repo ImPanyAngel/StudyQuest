@@ -1,7 +1,7 @@
-import { planAction, planAutoSat, type Action } from "../core/actions";
+import { planAction, planDailyCheck, type Action } from "../core/actions";
 import { localDateOf, type Clock } from "../core/dates";
 import { createIdFactory, eventRun, type IdFactory, type QuestEvent } from "../core/events";
-import { formatEvent, parseLog } from "../core/log-format";
+import { dropAfterClose, formatEvent, parseLog } from "../core/log-format";
 import { replay } from "../core/replay";
 import { err, ok, type Result } from "../core/result";
 import { emptyState, type State } from "../core/state";
@@ -38,7 +38,7 @@ export class QuestStore {
   load(): Promise<void> {
     return this.serial(async () => {
       const texts = await this.log.readAll();
-      this.events = texts.flatMap(parseLog);
+      this.events = texts.flatMap((text) => dropAfterClose(parseLog(text)));
       this.current = replay(this.events);
       this.notify();
     });
@@ -52,10 +52,10 @@ export class QuestStore {
     });
   }
 
-  /** Marks passed exams as sat. Resolves to the number of events written. */
-  runAutoSat(): Promise<number> {
+  /** Marks passed exams as sat, then closes ended runs. Resolves to the number of events written. */
+  runDailyCheck(): Promise<number> {
     return this.serial(async () => {
-      const events = planAutoSat(this.current, this.clock(), this.newId);
+      const events = planDailyCheck(this.current, this.clock(), this.newId);
       if (events.length === 0) return 0;
       const r = await this.write(events);
       return r.ok ? events.length : 0;

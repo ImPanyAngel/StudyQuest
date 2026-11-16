@@ -25,7 +25,7 @@ export default class StudyQuestPlugin extends Plugin {
     this.app.workspace.onLayoutReady(async () => {
       try {
         await this.store.load();
-        await this.store.runAutoSat();
+        await this.store.runDailyCheck();
       } catch (e) {
         new Notice(`StudyQuest couldn't read its log: ${e instanceof Error ? e.message : String(e)}`);
       }
@@ -58,7 +58,7 @@ export default class StudyQuestPlugin extends Plugin {
 
   /** Once per new day: mark passed exams as sat and refresh day-dependent UI. */
   private async onNewDay() {
-    await this.store.runAutoSat();
+    await this.store.runDailyCheck();
     this.badge.update();
     for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE)) {
       if (leaf.view instanceof StudyQuestView) leaf.view.refresh();

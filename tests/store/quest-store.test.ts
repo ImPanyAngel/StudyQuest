@@ -1,4 +1,5 @@
 import { QuestStore, joinForAppend, type LogPort } from "../../src/store/quest-store";
+import { stains, unseenPrestige } from "../../src/core/derive";
 import { Q2 } from "../core/fixtures";
 
 class FakeLog implements LogPort {
@@ -90,14 +91,14 @@ test("load replays existing files; a reloaded store has identical state", async 
   expect(again.state.runs.get(Q2.run)).toEqual(store.state.runs.get(Q2.run));
 });
 
-test("runAutoSat writes sat for passed exams once, and zero on second run", async () => {
+test("runDailyCheck writes sat for passed exams once, and zero on second run", async () => {
   const { log, store } = await setup();
   await store.dispatch({ type: "addObjective", run: Q2.run, course: "C1", kind: "exam", title: "Final", date: "2027-01-27" });
   now = new Date("2027-01-27T12:00:00.000Z");
-  expect(await store.runAutoSat()).toBe(0);
+  expect(await store.runDailyCheck()).toBe(0);
   now = new Date("2027-01-28T08:00:00.000Z");
-  expect(await store.runAutoSat()).toBe(1);
-  expect(await store.runAutoSat()).toBe(0);
+  expect(await store.runDailyCheck()).toBe(1);
+  expect(await store.runDailyCheck()).toBe(0);
   expect(log.count("objective_completed")).toBe(1);
   expect(store.state.objectives.get(`${Q2.run}/C1-EXM01`)!.completed?.tier).toBe("sat");
 });
@@ -113,4 +114,53 @@ test("DayTicker fires once per new local day, including after a long sleep", asy
   ticker.check();
   ticker.check();
   expect(calls).toBe(1);
+});
+
+/** Q2 with an exam on its last day and two lectures, one self-checked. */
+async function endedQ2() {
+  const { log, store } = await setup();
+  await store.dispatch({ type: "bulkAddObjectives", run: Q2.run, course: "C1", kind: "lecture", prefix: "Lecture", from: 1, to: 2 });
+  await store.dispatch({ type: "addObjective", run: Q2.run, course: "C1", kind: "exam", title: "Final", date: "2027-01-30" });
+  await store.dispatch({ type: "selfCheck", obj: `${Q2.run}/C1-LEC01` });
+  now = new Date("2027-01-31T08:00:00.000Z");
+  return { log, store };
+}
+
+test("daily check after the end date writes the last-day sat, then the close counting it", async () => {
+  const { log, store } = await endedQ2();
+  expect(await store.runDailyCheck()).toBe(2);
+  const lines = log.files.get(Q2.run)!.trim().split("\n");
+  expect(lines.slice(-2).map((l) => JSON.parse(l).type)).toEqual(["objective_completed", "quarter_closed"]);
+  expect(JSON.parse(lines.at(-1)!)).toMatchObject({ done: 2, total: 3, tier: 0 });
+  expect(await store.runDailyCheck()).toBe(0);
+});
+
+test("after acknowledging, a reload doesn't bring the Prestige Up screen back", async () => {
+  const { log, store } = await endedQ2();
+  await store.runDailyCheck();
+  expect(unseenPrestige(store.state).map((r) => r.id)).toEqual([Q2.run]);
+  expect((await store.dispatch({ type: "acknowledgePrestige", run: Q2.run })).ok).toBe(true);
+  const again = new QuestStore(log, clock);
+  await again.load();
+  expect(unseenPrestige(again.state)).toEqual([]);
+});
+
+test("a backdated line pasted below the close doesn't change the frozen run", async () => {
+  const { log, store } = await endedQ2();
+  await store.runDailyCheck();
+  const obj = `${Q2.run}/C1-LEC02`;
+  const line = JSON.stringify({ id: "e_ZZZZZZZZZZZZZZZZZZZZZZZZZZ", t: "2027-01-31T07:59:00.000Z", type: "objective_completed", obj, tier: "silver" });
+  log.files.set(Q2.run, log.files.get(Q2.run)! + line + "\n");
+  await store.load();
+  expect(store.state.objectives.get(obj)!.completed).toBeUndefined();
+  expect(stains(store.state, Q2.run).map((o) => o.id)).toEqual([obj]);
+});
+
+test("two concurrent acknowledges write one prestige_seen", async () => {
+  const { log, store } = await endedQ2();
+  await store.runDailyCheck();
+  const a = { type: "acknowledgePrestige" as const, run: Q2.run };
+  const [x, y] = await Promise.all([store.dispatch(a), store.dispatch(a)]);
+  expect([x.ok, y.ok].sort()).toEqual([false, true]);
+  expect(log.count("prestige_seen")).toBe(1);
 });
