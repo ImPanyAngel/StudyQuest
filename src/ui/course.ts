@@ -2,7 +2,7 @@ import { localDateOf, type Clock } from "../core/dates";
 import { courseObjectives, courseProgress, isResit, runEnded } from "../core/derive";
 import type { QuestStore } from "../store/quest-store";
 import { openCompleteMenu } from "./complete-menu";
-import { renderObjectiveMeta, renderTypeTag, type Navigate, type Route } from "./parts";
+import { renderMark, renderObjectiveMeta, renderTypeTag, type Navigate, type Route } from "./parts";
 
 export function renderCourse(
   el: HTMLElement,
@@ -42,7 +42,7 @@ export function renderCourse(
     row.createSpan({ cls: "sq-obj-title", text: o.title });
     renderObjectiveMeta(row, o);
     const tier = o.completed?.tier;
-    row.createSpan({ cls: `sq-mark is-${tier ?? "open"}`, text: tier ? tier.toUpperCase() : "open" });
+    renderMark(row, o, false);
     if (tier) {
       row.addClass("is-done");
     } else if (o.kind !== "exam" && !ended) {

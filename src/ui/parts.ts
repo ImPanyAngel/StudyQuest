@@ -2,7 +2,12 @@ import { formatShort } from "../core/dates";
 import { KIND_NAMES, type Kind } from "../core/events";
 import type { ObjectiveState } from "../core/state";
 
-export type Route = { tab: "home" } | { tab: "setup" } | { tab: "course"; run: string; course: string };
+export type Route =
+  | { tab: "home" }
+  | { tab: "setup" }
+  | { tab: "course"; run: string; course: string }
+  | { tab: "hall" }
+  | { tab: "run"; run: string };
 export type Navigate = (r: Route) => void;
 
 export const KIND_LABELS: Record<Kind, string> = KIND_NAMES;
@@ -24,4 +29,11 @@ export function renderObjectiveMeta(parent: HTMLElement, o: ObjectiveState, over
 export function renderSprite(parent: HTMLElement): void {
   const sprite = parent.createDiv({ cls: "sq-sprite" });
   for (const part of ["head", "body", "leg-l", "leg-r"]) sprite.createDiv({ cls: `sq-sprite-${part}` });
+}
+
+/** SILVER / SAT (GOLD later) when complete; otherwise STAIN on a closed run, open on a running one. */
+export function renderMark(parent: HTMLElement, o: ObjectiveState, closed: boolean): void {
+  const tier = o.completed?.tier;
+  const kind = tier ?? (closed ? "stain" : "open");
+  parent.createSpan({ cls: `sq-mark is-${kind}`, text: kind === "open" ? "open" : kind.toUpperCase() });
 }

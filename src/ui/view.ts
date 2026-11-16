@@ -2,8 +2,10 @@ import { ItemView, Notice, type WorkspaceLeaf } from "obsidian";
 import { runScore, unseenPrestige } from "../core/derive";
 import type { QuestStore } from "../store/quest-store";
 import { renderCourse } from "./course";
+import { renderHall } from "./hall";
 import { renderHome } from "./home";
 import { renderPrestigeUp } from "./prestige-up";
+import { renderRunPage } from "./run-page";
 import { renderSetup, type SetupUi } from "./setup";
 import type { Route } from "./parts";
 
@@ -83,8 +85,10 @@ export class StudyQuestView extends ItemView {
       if (active) t.addClass("is-active");
       t.onClickEvent(() => this.navigate(r));
     };
-    tab("Home", { tab: "home" }, this.route.tab !== "setup");
-    tab("Setup", { tab: "setup" }, this.route.tab === "setup");
+    const at = this.route.tab;
+    tab("Home", { tab: "home" }, at === "home" || at === "course");
+    tab("Setup", { tab: "setup" }, at === "setup");
+    tab("Hall", { tab: "hall" }, at === "hall" || at === "run");
 
     const body = root.createDiv({ cls: "sq-body" });
     const nav = (r: Route) => this.navigate(r);
@@ -98,6 +102,12 @@ export class StudyQuestView extends ItemView {
         break;
       case "setup":
         renderSetup(body, this.store, clock, this.setupUi, () => this.refresh());
+        break;
+      case "hall":
+        renderHall(body, this.store, nav, clock);
+        break;
+      case "run":
+        renderRunPage(body, this.store, this.route, nav);
         break;
     }
   }
