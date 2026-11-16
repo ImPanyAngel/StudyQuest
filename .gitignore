@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Build output
+main.js
+*.js.map
+dist/
+build/
+
+# Obsidian plugin settings (local per vault)
+data.json
+
+# Env / secrets
+.env
+.env.*
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
