@@ -1,7 +1,19 @@
-import { daysBetween, examWeek, isLocalDate, type LocalDate } from "./dates";
-import type { CourseAdded, CourseUndone, QuarterCreated, QuarterDatesCorrected, QuestEvent } from "./events";
+import { daysBetween, examWeek, isLocalDate, localDateOf, type LocalDate } from "./dates";
+import {
+  DATED_KINDS,
+  KINDS,
+  type CourseAdded,
+  type CourseUndone,
+  type ObjectiveAdded,
+  type ObjectiveCompleted,
+  type ObjectiveUndone,
+  type QuarterCreated,
+  type QuarterDatesCorrected,
+  type QuestEvent,
+  type StepCompleted,
+} from "./events";
 import { isCourseCode, runIdFromName } from "./ids";
-import { emptyState, type ObjectiveState, type RunState, type State } from "./state";
+import { emptyState, type ObjectiveState, type State } from "./state";
 
 const UNDO_WINDOW_MS = 30 * 60_000;
 
@@ -25,6 +37,14 @@ export function applyEvent(state: State, e: QuestEvent): string | null {
       return courseAdded(state, e);
     case "course_undone":
       return courseUndone(state, e);
+    case "objective_added":
+      return objectiveAdded(state, e);
+    case "objective_undone":
+      return objectiveUndone(state, e);
+    case "step_completed":
+      return stepCompleted(state, e);
+    case "objective_completed":
+      return objectiveCompleted(state, e);
     default:
       return "Unknown event type.";
   }
@@ -111,6 +131,94 @@ function courseUndone(state: State, e: CourseUndone): string | null {
   return null;
 }
 
+// ── objectives ──────────────────────────────────────────────────────────
+
+function objectiveAdded(state: State, e: ObjectiveAdded): string | null {
+  const run = state.runs.get(e.run);
+  if (!run || !run.courses.has(e.course)) return "Unknown course.";
+  if (!e.obj.startsWith(`${e.run}/${e.course}-`)) return "Objective id doesn't match its course.";
+  if (state.everObjectiveIds.has(e.obj)) return "That objective id has already been used.";
+  if (!KINDS.includes(e.kind)) return "Unknown objective type.";
+  if (typeof e.title !== "string" || !e.title.trim()) return "An objective needs a title.";
+
+  const dated = DATED_KINDS.includes(e.kind);
+  if (dated !== (e.date !== undefined)) {
+    return dated ? "Assignments and exams need a date." : "Only assignments and exams have a date.";
+  }
+  if (e.date !== undefined) {
+    if (!isLocalDate(e.date)) return "Dates must be valid YYYY-MM-DD dates.";
+    if (e.kind === "assignment" && (e.date < run.start || e.date > run.end)) {
+      return "An assignment's due date must fall within the run.";
+    }
+    const week = examWeek(run.end);
+    if (e.kind === "exam" && (e.date < week.from || e.date > week.to)) {
+      return "An exam's date must fall within exam week.";
+    }
+  }
+
+  const isProgress = e.kind === "progress";
+  if (isProgress !== (e.steps !== undefined)) {
+    return isProgress ? "A progress objective needs steps." : "Only progress objectives have steps.";
+  }
+  if (e.steps !== undefined) {
+    if (!Array.isArray(e.steps) || e.steps.length < 2) return "A progress objective needs at least two steps.";
+    if (e.steps.some((s) => typeof s !== "string" || !s.trim())) return "Steps can't be empty.";
+  }
+
+  const o: ObjectiveState = {
+    id: e.obj,
+    run: e.run,
+    course: e.course,
+    kind: e.kind,
+    title: e.title,
+    source: "manual",
+    stepsDone: e.steps ? e.steps.map(() => false) : [],
+    addedAt: e.t,
+  };
+  if (e.date !== undefined) o.date = e.date;
+  if (e.steps !== undefined) o.steps = [...e.steps];
+  state.objectives.set(o.id, o);
+  state.everObjectiveIds.add(o.id);
+  return null;
+}
+
+function objectiveUndone(state: State, e: ObjectiveUndone): string | null {
+  const o = state.objectives.get(e.obj);
+  if (!o) return "Unknown objective.";
+  if (hasProgress(o)) return "Completed work can't be undone.";
+  if (!withinUndoWindow(o.addedAt, e.t)) return "The undo window for this objective has passed.";
+  state.objectives.delete(o.id);
+  return null;
+}
+
+function stepCompleted(state: State, e: StepCompleted): string | null {
+  const o = state.objectives.get(e.obj);
+  if (!o) return "Unknown objective.";
+  if (o.kind !== "progress" || !o.steps) return "Only progress objectives have steps.";
+  if (o.completed) return "This objective is already complete.";
+  if (!Number.isInteger(e.step) || e.step < 0 || e.step >= o.steps.length) return "Unknown step.";
+  if (o.stepsDone[e.step]) return "That step is already checked.";
+  o.stepsDone[e.step] = true;
+  return null;
+}
+
+function objectiveCompleted(state: State, e: ObjectiveCompleted): string | null {
+  const o = state.objectives.get(e.obj);
+  if (!o) return "Unknown objective.";
+  if (o.completed) return "This objective is already complete.";
+  if (e.tier === "silver") {
+    if (o.kind === "exam") return "Exams complete automatically.";
+    if (o.kind === "progress" && !o.stepsDone.every(Boolean)) return "Check every step first.";
+  } else if (e.tier === "sat") {
+    if (o.kind !== "exam" || !o.date) return "Only exams can be marked sat.";
+    if (localDateOf(new Date(e.t)) <= o.date) return "The exam date hasn't passed yet.";
+  } else {
+    return "Unknown completion tier.";
+  }
+  o.completed = { tier: e.tier, at: e.t };
+  return null;
+}
+
 // ── helpers ─────────────────────────────────────────────────────────────
 
 function objectivesOfRun(state: State, run: string): ObjectiveState[] {
@@ -121,4 +229,3 @@ function hasProgress(o: ObjectiveState): boolean {
   return o.completed !== undefined || o.stepsDone.some(Boolean);
 }
 
-export type { RunState };
