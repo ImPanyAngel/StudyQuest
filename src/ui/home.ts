@@ -1,0 +1,76 @@
+import { examWeek, formatShort, localDateOf, type Clock } from "../core/dates";
+import { courseProgress, currentRun, homeRows, isResit, runEnded, runProgress, type HomeRow } from "../core/derive";
+import type { QuestStore } from "../store/quest-store";
+import { openCompleteMenu } from "./complete-menu";
+import { renderObjectiveMeta, renderTypeTag, type Navigate } from "./parts";
+
+export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, clock: Clock): void {
+  const s = store.state;
+  const today = localDateOf(clock());
+  const run = currentRun(s, today);
+
+  if (!run) {
+    const empty = el.createDiv({ cls: "sq-empty" });
+    empty.createEl("p", { text: "No run yet. Set up your quarter to start." });
+    empty.createEl("button", { text: "Go to Setup", cls: "mod-cta" }).onClickEvent(() => nav({ tab: "setup" }));
+    return;
+  }
+  const ended = runEnded(run, today);
+
+  // ── top row ──
+  const top = el.createDiv({ cls: "sq-top" });
+
+  const pct = runProgress(s, run.id).pct;
+  const ring = top.createDiv({ cls: "sq-ring" });
+  ring.style.setProperty("--sq-pct", String(pct ?? 0));
+  ring.createDiv({ cls: "sq-ring-value", text: pct === null ? "—" : `${pct}%` });
+  ring.createDiv({ cls: "sq-ring-label", text: run.name });
+
+  const middle = top.createDiv({ cls: "sq-middle" });
+  const week = examWeek(run.end);
+  middle.createDiv({
+    cls: "sq-exam-week",
+    text: `${ended ? "Ended · " : ""}Exam week: ${formatShort(week.from)} → ${formatShort(week.to)}`,
+  });
+  const list = middle.createDiv({ cls: "sq-courses" });
+  if (run.courses.size === 0) list.createDiv({ cls: "sq-muted", text: "No courses yet. Add them in Setup." });
+  for (const c of run.courses.values()) {
+    const p = courseProgress(s, run.id, c.code);
+    const row = list.createDiv({ cls: "sq-course-row" });
+    row.createSpan({ cls: "sq-code", text: c.code });
+    row.createSpan({ cls: "sq-name", text: c.name });
+    if (isResit(s, run.id, c.code)) row.createSpan({ cls: "sq-pill", text: "RESIT" });
+    const bar = row.createSpan({ cls: "sq-bar" });
+    bar.createSpan({ cls: "sq-bar-fill" }).style.width = `${p.pct ?? 0}%`;
+    row.createSpan({ cls: "sq-pct", text: p.pct === null ? "—" : `${p.pct}%` });
+    row.onClickEvent(() => nav({ tab: "course", run: run.id, course: c.code }));
+  }
+
+  const player = top.createDiv({ cls: "sq-player" });
+  const sprite = player.createDiv({ cls: "sq-sprite" });
+  for (const part of ["head", "body", "leg-l", "leg-r"]) sprite.createDiv({ cls: `sq-sprite-${part}` });
+
+  // ── objectives ──
+  el.createEl("h4", { cls: "sq-section", text: "Objectives" });
+  const rows = homeRows(s, run.id, today);
+  const box = el.createDiv({ cls: "sq-objectives" });
+  if (rows.dated.length === 0 && rows.anytime.length === 0) {
+    box.createDiv({ cls: "sq-muted", text: run.courses.size ? "Nothing open." : "Add objectives in Setup." });
+  }
+  for (const r of rows.dated) renderRow(box, r, store, ended);
+  if (rows.anytime.length) box.createDiv({ cls: "sq-divider", text: "anytime" });
+  for (const r of rows.anytime) renderRow(box, r, store, ended);
+}
+
+function renderRow(box: HTMLElement, r: HomeRow, store: QuestStore, ended: boolean) {
+  const row = box.createDiv({ cls: "sq-obj-row" });
+  if (r.overdue) row.addClass("is-overdue");
+  if (r.soon) row.addClass("is-soon");
+  renderTypeTag(row, r.obj.kind);
+  row.createSpan({ cls: "sq-obj-title", text: `${r.obj.course} · ${r.obj.title}` });
+  renderObjectiveMeta(row, r.obj, r.overdue);
+  if (r.clickable && !ended) {
+    row.addClass("is-clickable");
+    row.onClickEvent((evt) => openCompleteMenu(evt, r.obj, store));
+  }
+}
