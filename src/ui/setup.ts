@@ -9,12 +9,14 @@ import {
   currentRun,
   isResit,
   runEnded,
+  runScore,
   undoDeadline,
 } from "../core/derive";
+import { tierLabel } from "../core/prestige";
 import { BULK_KINDS, DATED_KINDS, KINDS, type Kind } from "../core/events";
 import { runIdFromName } from "../core/ids";
 import type { QuestStore } from "../store/quest-store";
-import { KIND_LABELS, renderObjectiveMeta, renderTypeTag } from "./parts";
+import { KIND_LABELS, renderMark, renderObjectiveMeta, renderTypeTag } from "./parts";
 import { singleFlight } from "./single-flight";
 
 /** Setup's own UI state, kept on the view so re-renders don't lose typed input. */
@@ -78,9 +80,15 @@ export function renderSetup(el: HTMLElement, store: QuestStore, clock: Clock, ui
   }
 
   const run = s.runs.get(ui.run)!;
-  const ended = runEnded(run, today);
+  const closed = !!run.closed;
+  // A closed run is frozen: no forms and no undo, whatever the clock says.
+  const ended = closed || runEnded(run, today);
   const week = examWeek(run.end);
-  if (canCorrectRun(run, now)) {
+  if (closed) {
+    const score = runScore(s, run.id);
+    const pct = score.pct === null ? "—" : `${score.pct}%`;
+    s1.createDiv({ cls: "sq-line", text: `${formatShort(run.start)} → ${formatShort(run.end)} · closed · ${pct} · ${tierLabel(score.tier ?? 0)}` });
+  } else if (canCorrectRun(run, now)) {
     const row = s1.createDiv({ cls: "sq-form" });
     labelled(row, "Start", field(row, `fix.${run.id}.start`, { type: "date", value: run.start }));
     labelled(row, "End", field(row, `fix.${run.id}.end`, { type: "date", value: run.end }));
@@ -100,7 +108,8 @@ export function renderSetup(el: HTMLElement, store: QuestStore, clock: Clock, ui
     s1.createDiv({ cls: "sq-line", text: `${formatShort(run.start)} → ${formatShort(run.end)} · locked` });
   }
   s1.createDiv({ cls: "sq-hint", text: `Exam week: ${formatShort(week.from)} → ${formatShort(week.to)}` });
-  if (ended) s1.createDiv({ cls: "sq-hint is-warning", text: "This run has ended. Nothing more can be added." });
+  if (closed) s1.createDiv({ cls: "sq-hint", text: "This run is closed. Its record is final." });
+  else if (ended) s1.createDiv({ cls: "sq-hint is-warning", text: "This run has ended. Nothing more can be added." });
 
   // ── 2 · courses ──
   const s2 = section(el, "2 · Courses");
@@ -111,7 +120,7 @@ export function renderSetup(el: HTMLElement, store: QuestStore, clock: Clock, ui
     row.createSpan({ cls: "sq-name", text: c.name });
     if (isResit(s, run.id, c.code)) row.createSpan({ cls: "sq-pill", text: "RESIT" });
     row.createSpan({ cls: "sq-hint", text: `folder: ${c.folder}` });
-    if (canUndoCourse(s, run.id, c.code, now)) {
+    if (!closed && canUndoCourse(s, run.id, c.code, now)) {
       button(row, `Undo · ${minutesLeft(c.addedAt)} min left`, () => act({ type: "undoCourse", run: run.id, code: c.code }));
     }
   }
@@ -165,8 +174,8 @@ export function renderSetup(el: HTMLElement, store: QuestStore, clock: Clock, ui
     renderTypeTag(row, o.kind);
     row.createSpan({ cls: "sq-obj-title", text: o.title });
     renderObjectiveMeta(row, o);
-    if (o.completed) row.createSpan({ cls: `sq-mark is-${o.completed.tier}`, text: o.completed.tier.toUpperCase() });
-    if (canUndoObjective(o, now)) button(row, `Undo · ${minutesLeft(o.addedAt)} min left`, () => act({ type: "undoObjective", obj: o.id }));
+    if (o.completed || closed) renderMark(row, o, closed);
+    if (!closed && canUndoObjective(o, now)) button(row, `Undo · ${minutesLeft(o.addedAt)} min left`, () => act({ type: "undoObjective", obj: o.id }));
   }
   if (ended) return;
 

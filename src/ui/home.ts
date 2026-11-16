@@ -1,5 +1,6 @@
 import { examWeek, formatShort, localDateOf, type Clock } from "../core/dates";
-import { courseProgress, currentRun, homeRows, isResit, runEnded, runProgress, type HomeRow } from "../core/derive";
+import { courseProgress, currentRun, homeRows, isResit, runEnded, runProgress, runScore, type HomeRow } from "../core/derive";
+import { tierLabel } from "../core/prestige";
 import type { QuestStore } from "../store/quest-store";
 import { openCompleteMenu } from "./complete-menu";
 import { renderObjectiveMeta, renderSprite, renderTypeTag, type Navigate } from "./parts";
@@ -16,6 +17,17 @@ export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, cl
     return;
   }
   const ended = runEnded(run, today);
+
+  if (run.closed) {
+    const score = runScore(s, run.id);
+    const box = el.createDiv({ cls: "sq-empty" });
+    box.createEl("p", { text: `${run.name} is closed.` });
+    box.createEl("p", { cls: "sq-closed-score", text: `${score.pct === null ? "—" : `${score.pct}%`} · ${tierLabel(score.tier ?? 0)}` });
+    const buttons = box.createDiv({ cls: "sq-prestige-buttons" });
+    buttons.createEl("button", { text: "Go to Setup", cls: "mod-cta" }).onClickEvent(() => nav({ tab: "setup" }));
+    buttons.createEl("button", { text: "Open Hall" }).onClickEvent(() => nav({ tab: "hall" }));
+    return;
+  }
 
   // ── top row ──
   const top = el.createDiv({ cls: "sq-top" });

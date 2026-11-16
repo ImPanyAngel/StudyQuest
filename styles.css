@@ -134,3 +134,4 @@
 .studyquest .sq-run-head { margin-bottom: 8px; }
 .studyquest .sq-run-title { font-size: 16px; font-weight: 600; }
 .studyquest .sq-mark.is-stain { border-color: var(--sq-overdue); color: var(--sq-overdue); }
+.studyquest .sq-closed-score { font-size: 28px; font-weight: 700; }

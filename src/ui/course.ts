@@ -22,6 +22,7 @@ export function renderCourse(
     return;
   }
   const ended = runEnded(run, localDateOf(clock()));
+  const closed = !!run.closed;
 
   const head = el.createDiv({ cls: "sq-course-head" });
   head.createSpan({ cls: "sq-code", text: course.code });
@@ -42,10 +43,10 @@ export function renderCourse(
     row.createSpan({ cls: "sq-obj-title", text: o.title });
     renderObjectiveMeta(row, o);
     const tier = o.completed?.tier;
-    renderMark(row, o, false);
+    renderMark(row, o, closed);
     if (tier) {
       row.addClass("is-done");
-    } else if (o.kind !== "exam" && !ended) {
+    } else if (o.kind !== "exam" && !ended && !closed) {
       row.addClass("is-clickable");
       row.onClickEvent((evt) => openCompleteMenu(evt, o, store));
     }
