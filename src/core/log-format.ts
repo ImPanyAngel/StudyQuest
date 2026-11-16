@@ -2,6 +2,7 @@ import { EVENT_TYPES, type QuestEvent } from "./events";
 
 type FieldType = "string" | "number";
 const S: FieldType = "string";
+const N: FieldType = "number";
 
 /** Required fields per event type, with their JSON types. */
 const REQUIRED: Record<QuestEvent["type"], Record<string, FieldType>> = {
@@ -11,8 +12,10 @@ const REQUIRED: Record<QuestEvent["type"], Record<string, FieldType>> = {
   course_undone: { run: S, course: S },
   objective_added: { obj: S, run: S, course: S, kind: S, title: S, source: S },
   objective_undone: { obj: S },
-  step_completed: { obj: S, step: "number" },
+  step_completed: { obj: S, step: N },
   objective_completed: { obj: S, tier: S },
+  quarter_closed: { run: S, done: N, total: N, tier: N },
+  prestige_seen: { run: S },
 };
 
 function wellFormed(e: Record<string, unknown>, type: QuestEvent["type"]): boolean {

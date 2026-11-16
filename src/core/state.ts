@@ -1,5 +1,6 @@
 import type { LocalDate } from "./dates";
 import type { Kind, Tier } from "./events";
+import type { PrestigeTier } from "./prestige";
 
 export interface CourseState {
   code: string;
@@ -16,6 +17,10 @@ export interface RunState {
   createdAt: string;
   /** Active courses by code, in the order added. */
   courses: Map<string, CourseState>;
+  /** Set by `quarter_closed`: the frozen result. */
+  closed?: { done: number; total: number; tier: PrestigeTier; at: string };
+  /** Set by `prestige_seen`. */
+  seenAt?: string;
 }
 
 export interface ObjectiveState {

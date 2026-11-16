@@ -80,6 +80,19 @@ export interface ObjectiveCompleted extends Base {
   tier: Tier;
 }
 
+export interface QuarterClosed extends Base {
+  type: "quarter_closed";
+  run: string;
+  done: number;
+  total: number;
+  tier: number;
+}
+
+export interface PrestigeSeen extends Base {
+  type: "prestige_seen";
+  run: string;
+}
+
 export type QuestEvent =
   | QuarterCreated
   | QuarterDatesCorrected
@@ -88,7 +101,9 @@ export type QuestEvent =
   | ObjectiveAdded
   | ObjectiveUndone
   | StepCompleted
-  | ObjectiveCompleted;
+  | ObjectiveCompleted
+  | QuarterClosed
+  | PrestigeSeen;
 
 export const EVENT_TYPES: QuestEvent["type"][] = [
   "quarter_created",
@@ -99,7 +114,14 @@ export const EVENT_TYPES: QuestEvent["type"][] = [
   "objective_undone",
   "step_completed",
   "objective_completed",
+  "quarter_closed",
+  "prestige_seen",
 ];
+
+/** The run an event belongs to. Objective ids carry their run before the `/`. */
+export function eventRun(e: QuestEvent): string {
+  return "run" in e ? e.run : e.obj.split("/")[0];
+}
 
 export type IdFactory = (now: Date) => string;
 

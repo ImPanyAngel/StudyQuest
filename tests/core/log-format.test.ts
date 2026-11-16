@@ -37,3 +37,13 @@ test("parseLog drops events with missing or wrong-typed fields", () => {
   ].map((l) => JSON.stringify(l));
   expect(parseLog(lines.join("\n")).map((e) => e.id)).toEqual(["e_7"]);
 });
+
+test("parseLog reads quarter_closed and prestige_seen, and checks their field types", () => {
+  const text = [
+    '{"id":"e_1","t":"2027-01-31T08:00:00.000Z","type":"quarter_closed","run":"R","done":3,"total":4,"tier":0}',
+    '{"id":"e_2","t":"2027-01-31T08:01:00.000Z","type":"prestige_seen","run":"R"}',
+    '{"id":"e_3","t":"2027-01-31T08:00:00.000Z","type":"quarter_closed","run":"R","done":"3","total":4,"tier":0}',
+    '{"id":"e_4","t":"2027-01-31T08:01:00.000Z","type":"prestige_seen"}',
+  ].join("\n");
+  expect(parseLog(text).map((e) => e.id)).toEqual(["e_1", "e_2"]);
+});

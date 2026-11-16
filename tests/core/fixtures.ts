@@ -6,6 +6,8 @@ import type {
   ObjectiveAdded,
   ObjectiveCompleted,
   ObjectiveUndone,
+  PrestigeSeen,
+  QuarterClosed,
   QuarterCreated,
   QuarterDatesCorrected,
   StepCompleted,
@@ -66,5 +68,11 @@ export const ev = {
   },
   completed(obj: string, tier: "silver" | "sat", t: string): ObjectiveCompleted {
     return { id: id(), t, type: "objective_completed", obj, tier };
+  },
+  closed(run: string, done: number, total: number, tier: number, t: string): QuarterClosed {
+    return { id: id(), t, type: "quarter_closed", run, done, total, tier };
+  },
+  seen(run: string, t: string): PrestigeSeen {
+    return { id: id(), t, type: "prestige_seen", run };
   },
 };
