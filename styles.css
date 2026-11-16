@@ -86,3 +86,9 @@
 .studyquest .sq-mark.is-sat { border-color: var(--sq-sat); color: var(--sq-sat); }
 .studyquest .sq-mark.is-gold { border-color: var(--sq-gold); color: var(--sq-gold); }
 .studyquest .is-done .sq-obj-title { color: var(--sq-muted); }
+
+/* ── course view ── */
+.studyquest .sq-back { font-size: 12px; color: var(--sq-muted); cursor: pointer; margin-bottom: 10px; display: inline-block; }
+.studyquest .sq-back:hover { color: var(--sq-fg); }
+.studyquest .sq-course-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; font-size: 16px; }
+.studyquest .sq-course-head .sq-bar { width: 160px; height: 8px; }

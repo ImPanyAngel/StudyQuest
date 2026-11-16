@@ -1,5 +1,6 @@
 import { ItemView, type WorkspaceLeaf } from "obsidian";
 import type { QuestStore } from "../store/quest-store";
+import { renderCourse } from "./course";
 import { renderHome } from "./home";
 import type { Route } from "./parts";
 
@@ -64,7 +65,7 @@ export class StudyQuestView extends ItemView {
         renderHome(body, this.store, nav, clock);
         break;
       case "course":
-        body.createDiv({ cls: "sq-muted", text: "Course view arrives in the next build step." });
+        renderCourse(body, this.store, this.route, nav, clock);
         break;
       case "setup":
         body.createDiv({ cls: "sq-muted", text: "Setup arrives in a later build step." });
