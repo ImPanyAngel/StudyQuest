@@ -20,7 +20,8 @@ Everything hangs off three things: **prestige run → course → objective**.
 
 - **Prestige run.** A period with a start and end date, both entered manually from the TU Delft academic calendar. Normally a run is one quarter. The thesis is the exception: it is a single run that can span up to three quarters. When the end date passes, the run freezes into a prestige card in the history.
 - **Course.** Belongs to one run and maps to a folder in the vault (e.g. `DSAIT4010/`). It may have a roadmap and/or schedule, or neither. A course never extends past its run's end date.
-- **Objective.** One completable thing. Its fields are title, type, course, source (roadmap or manual), an optional due date, linked evidence and status. A due date can't fall after the run's end date.
+- **Objective.** One completable thing. Its fields are title, type, course, source (roadmap or manual), a date (assignments and exams only), linked evidence and status. Lectures, labs, readings and progress objectives have no date and can be done anytime. A due date can't fall after the run's end date, and an exam date always falls within exam week (the run's last 7 days).
+- **Resits.** The same course can appear in a later run if it has to be resat. Each attempt is its own course in its own run.
 
 | Type | Example | Evidence |
 | --- | --- | --- |
@@ -29,7 +30,7 @@ Everything hangs off three things: **prestige run → course → objective**.
 | Lab | DSAIT4000 Lab 3 | Notebook or lab notes |
 | Reading | Book, chapter 4 | Reading notes `.md` |
 | Progress | Book chapters 1–5 | A set of sub-steps, each ticked separately |
-| Exam (proposed) | Mock exam attempted | Self-claim, optionally with a score |
+| Exam | DSAIT4000 Final exam | None: completes automatically as **sat** once its date passes |
 
 A **Progress** objective holds sub-steps (e.g. five chapters). It's complete only when all its sub-steps are, and the card shows a progress bar meanwhile.
 
@@ -41,13 +42,15 @@ The prestige score means something because objectives can be added but never rem
 
 1. **Roadmap or schedule import.** Drop in the course roadmap and/or schedule. The plugin drafts a list of objectives, which you review, edit and then lock. After locking, those objectives can't be edited or deleted.
 2. **Manual adding.** Allowed on every course at any time, including courses with a locked roadmap, because new things always come up.
-3. **No deleting.** Neither imported nor manual objectives can be deleted. The one exception is a short undo window right after adding a manual objective, for typos (30 minutes).
+3. **No deleting.** Neither imported nor manual objectives can be deleted. The one exception is a short undo window right after adding a manual objective, for typos (30 minutes). Any completion ends that window early.
+4. **Locked dates.** A run's start and end dates lock once set, with the same 30-minute undo window.
 
 **Completing an objective**
 
 - **Gold:** you link evidence and it passes verification.
 - **Silver:** you self-claim it, either because verification failed and you overrode it, or because there's nothing to upload (e.g. a paper book).
-- Both count as complete. The difference shows permanently on the objective and in the run's prestige card.
+- **Sat:** exams only, set automatically once the exam date passes. A neutral mark, neither gold nor silver.
+- All three count as complete. The difference shows permanently on the objective and in the run's prestige card.
 
 ```mermaid
 flowchart LR
@@ -152,9 +155,9 @@ Styling is unrestricted. Plugin views are plain HTML, CSS and canvas, so StudyQu
 
 | Screen | Shows |
 | --- | --- |
-| Home | Character, level, XP bar, current run's completion |
-| Quarter board | Every course and its objectives, with status and due dates |
-| Course | One course's objectives, roadmap lock state, completion % |
+| Home | Completion ring, exam week, course list with %, character, open objectives (see `docs/Home Prototype Design.png`) |
+| Setup | Run dates, courses, adding objectives |
+| Course | One course's full objective list with marks, roadmap lock state, completion % (opened from Home) |
 | Objective | Linked evidence, verify button, verification result, gold or silver |
 | Prestige hall | Past runs as cards: tier, %, stains, outfit snapshot |
 | Wardrobe and shop | Equip and buy cosmetics, see locked achievement items |
@@ -189,7 +192,7 @@ Every event has a unique ID. Replay de-duplicates by ID and orders by time, as a
 
 Phases 1–2 make it usable for Q2 with manual objectives. Each later phase adds one layer without changing the log format.
 
-1. **Core loop.** Plugin scaffold, runs, courses, objectives, manual adding, self-claim, the event log, Quarter board view.
+1. **Core loop.** Plugin scaffold, runs, courses, objectives, manual adding, self-claim, exam auto-sat, the event log, Home, course view and Setup. Spec: `docs/superpowers/specs/2026-11-16-phase-1-core-loop-design.md`.
 2. **Prestige.** No-delete with an undo window, run close, tiers, Prestige hall.
 3. **Obsidian linking.** Frontmatter tags, course folders, the link command, evidence on objectives.
 4. **Verification.** Rule checks for notebooks and notes, Apple on-device model check (Ollama as fallback), gold vs silver.
@@ -202,7 +205,8 @@ Phases 1–2 make it usable for Q2 with manual objectives. Each later phase adds
 - [x] Courses that run across two quarters? Answer: no course takes more than a quarter except the final thesis, which takes 3. The thesis is one prestige run spanning those quarters.
 - [x] Undo window for manual objectives? Answer: 30 minutes.
 - [x] Should silver count fully towards 100%, or partly? Answer: fully.
-- [ ] Exam objectives: keep them, and what counts as evidence?
+- [x] Exam objectives: keep them, and what counts as evidence? Answer: keep them. No evidence; they complete automatically as "sat" once their date (in exam week) passes.
+- [x] Quarter board screen? Answer: dropped. Home plus the course view cover it.
 - [x] Pixel art: draw it yourself, use a free asset pack, or a mix? Answer: free assets unless we can't find suitable ones, then draw.
 - [x] Phone support? Answer: no. Mac only, to keep study off the phone.
 - [x] How are run dates set? Answer: manually, from the university's official quarter dates. No course or due date goes past the end date.
