@@ -26,8 +26,29 @@ export function isLocalDate(s: string): boolean {
   return fromUtc(toUtc(s)) === s;
 }
 
+/** `en-CA` formats as `YYYY-MM-DD`. */
+const AMSTERDAM = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Europe/Amsterdam",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+/** The calendar date in Amsterdam at instant `d`, whatever the system time zone. */
 export function localDateOf(d: Date): LocalDate {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  return AMSTERDAM.format(d);
+}
+
+/** The first instant after `now` at which the Amsterdam date changes. */
+export function nextLocalMidnight(now: Date): Date {
+  const tomorrow = addDays(localDateOf(now), 1);
+  const utcMidnight = toUtc(tomorrow).getTime();
+  // Amsterdam is UTC+1 or UTC+2, so midnight there is 1 or 2 hours before UTC midnight.
+  for (const hours of [2, 1]) {
+    const candidate = new Date(utcMidnight - hours * 3_600_000);
+    if (localDateOf(candidate) === tomorrow && localDateOf(new Date(candidate.getTime() - 1)) !== tomorrow) return candidate;
+  }
+  throw new Error(`No Amsterdam midnight found for ${tomorrow}`);
 }
 
 export function addDays(d: LocalDate, n: number): LocalDate {

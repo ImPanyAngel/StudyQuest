@@ -1,13 +1,13 @@
 {
   "name": "studyquest",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Turns each university quarter into a game run.",
   "main": "main.js",
   "private": true,
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-    "test": "TZ=Europe/Amsterdam vitest run"
+    "test": "TZ=America/New_York vitest run"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

@@ -1,4 +1,5 @@
 import { Notice, Plugin } from "obsidian";
+import { nextLocalMidnight } from "./core/dates";
 import { DayTicker, QuestStore } from "./store/quest-store";
 import { VaultLog } from "./store/vault-log";
 import { StatusBadge } from "./ui/status-bar";
@@ -48,11 +49,11 @@ export default class StudyQuestPlugin extends Plugin {
   /** Wakes just after local midnight to check for a new day. */
   private scheduleMidnightCheck() {
     const now = new Date();
-    const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5);
+    const next = nextLocalMidnight(now).getTime() + 5_000;
     this.midnightTimer = window.setTimeout(() => {
       this.dayTicker.check();
       this.scheduleMidnightCheck();
-    }, next.getTime() - now.getTime());
+    }, next - now.getTime());
   }
 
   /** Once per new day: mark passed exams as sat and refresh day-dependent UI. */

@@ -1,4 +1,4 @@
-import { addDays, daysBetween, examWeek, formatShort, isLocalDate, localDateOf } from "../../src/core/dates";
+import { addDays, daysBetween, examWeek, formatShort, isLocalDate, localDateOf, nextLocalMidnight } from "../../src/core/dates";
 import { err, ok } from "../../src/core/result";
 
 test("isLocalDate", () => {
@@ -23,9 +23,18 @@ test("examWeek", () => {
   expect(examWeek("2027-01-30")).toEqual({ from: "2027-01-23", to: "2027-01-30" });
 });
 
-test("localDateOf uses local time", () => {
-  expect(localDateOf(new Date("2027-01-27T23:30:00Z"))).toBe("2027-01-28");
-  expect(localDateOf(new Date("2027-01-27T22:30:00Z"))).toBe("2027-01-27");
+test("localDateOf is the Amsterdam date", () => {
+  expect(localDateOf(new Date("2027-01-27T23:30:00Z"))).toBe("2027-01-28"); // 00:30 CET
+  expect(localDateOf(new Date("2027-01-27T22:30:00Z"))).toBe("2027-01-27"); // 23:30 CET
+  expect(localDateOf(new Date("2027-03-28T22:30:00Z"))).toBe("2027-03-29"); // 00:30 CEST
+  expect(localDateOf(new Date("2027-03-28T21:30:00Z"))).toBe("2027-03-28"); // 23:30 CEST
+});
+
+test("nextLocalMidnight follows Amsterdam across DST", () => {
+  expect(nextLocalMidnight(new Date("2027-01-27T12:00:00Z")).toISOString()).toBe("2027-01-27T23:00:00.000Z");
+  expect(nextLocalMidnight(new Date("2027-01-27T23:00:00Z")).toISOString()).toBe("2027-01-28T23:00:00.000Z");
+  expect(nextLocalMidnight(new Date("2027-03-28T12:00:00Z")).toISOString()).toBe("2027-03-28T22:00:00.000Z");
+  expect(nextLocalMidnight(new Date("2027-10-31T12:00:00Z")).toISOString()).toBe("2027-10-31T23:00:00.000Z");
 });
 
 test("formatShort", () => {
