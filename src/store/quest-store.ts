@@ -1,6 +1,6 @@
-import { planAction, planAutoSat, runOf, type Action } from "../core/actions";
+import { planAction, planAutoSat, type Action } from "../core/actions";
 import { localDateOf, type Clock } from "../core/dates";
-import { createIdFactory, type IdFactory, type QuestEvent } from "../core/events";
+import { createIdFactory, eventRun, type IdFactory, type QuestEvent } from "../core/events";
 import { formatEvent, parseLog } from "../core/log-format";
 import { replay } from "../core/replay";
 import { err, ok, type Result } from "../core/result";
@@ -70,7 +70,7 @@ export class QuestStore {
   private async write(events: QuestEvent[]): Promise<Result<void>> {
     const byRun = new Map<string, string[]>();
     for (const e of events) {
-      const run = runOf(e, this.current);
+      const run = eventRun(e);
       byRun.set(run, [...(byRun.get(run) ?? []), formatEvent(e)]);
     }
     try {

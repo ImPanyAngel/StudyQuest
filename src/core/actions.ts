@@ -50,12 +50,6 @@ export function planAutoSat(s: State, now: Date, newId: IdFactory): QuestEvent[]
   }));
 }
 
-/** The run whose log file an event belongs in. */
-export function runOf(e: QuestEvent, s: State): string {
-  if ("run" in e) return e.run;
-  return s.objectives.get(e.obj)?.run ?? e.obj.split("/")[0];
-}
-
 function draftsFor(s: State, a: Action, now: Date): Result<Draft[]> {
   const today = localDateOf(now);
   const ended = (run: string): boolean => {

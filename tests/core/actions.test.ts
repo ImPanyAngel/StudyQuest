@@ -1,4 +1,4 @@
-import { planAction, planAutoSat, runOf, type Action } from "../../src/core/actions";
+import { planAction, planAutoSat, type Action } from "../../src/core/actions";
 import { createIdFactory, type QuestEvent } from "../../src/core/events";
 import { replay } from "../../src/core/replay";
 import { Q2, T0, at, ev } from "./fixtures";
@@ -110,13 +110,6 @@ test("planAutoSat emits sat only for exams whose date < today", () => {
   const out = planAutoSat(s, new Date("2027-01-27T12:00:00.000Z"), ids);
   expect(out).toMatchObject([{ type: "objective_completed", obj: ex1.obj, tier: "sat" }]);
   expect(planAutoSat(s, new Date("2027-01-23T12:00:00.000Z"), ids)).toEqual([]);
-});
-
-test("runOf", () => {
-  const l = ev.objective(R, "C1", "lecture", 1, at(2));
-  const s = replay([...base(), l]);
-  expect(runOf(ev.course(R, "C2"), s)).toBe(R);
-  expect(runOf(ev.completed(l.obj, "silver", at(3)), s)).toBe(R);
 });
 
 test("bulk add with a blank prefix uses the type's own name", () => {

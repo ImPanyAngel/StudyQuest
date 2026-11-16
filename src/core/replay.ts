@@ -7,12 +7,16 @@ import {
   type ObjectiveAdded,
   type ObjectiveCompleted,
   type ObjectiveUndone,
+  type PrestigeSeen,
+  type QuarterClosed,
   type QuarterCreated,
   type QuarterDatesCorrected,
   type QuestEvent,
   type StepCompleted,
+  eventRun,
 } from "./events";
 import { isCourseCode, runIdFromName } from "./ids";
+import { isPrestigeTier } from "./prestige";
 import { emptyState, type ObjectiveState, type State } from "./state";
 
 const UNDO_WINDOW_MS = 30 * 60_000;
@@ -28,6 +32,9 @@ export function withinUndoWindow(targetT: string, t: string): boolean {
  * reason it was rejected (state untouched).
  */
 export function applyEvent(state: State, e: QuestEvent): string | null {
+  if (e.type !== "quarter_created" && e.type !== "quarter_closed" && e.type !== "prestige_seen") {
+    if (state.runs.get(eventRun(e))?.closed) return "This run is closed.";
+  }
   switch (e.type) {
     case "quarter_created":
       return quarterCreated(state, e);
@@ -45,6 +52,10 @@ export function applyEvent(state: State, e: QuestEvent): string | null {
       return stepCompleted(state, e);
     case "objective_completed":
       return objectiveCompleted(state, e);
+    case "quarter_closed":
+      return quarterClosed(state, e);
+    case "prestige_seen":
+      return prestigeSeen(state, e);
     default:
       return "Unknown event type.";
   }
@@ -111,6 +122,26 @@ function quarterDatesCorrected(state: State, e: QuarterDatesCorrected): string |
   if (bad) return bad;
   run.start = e.start;
   run.end = e.end;
+  return null;
+}
+
+function quarterClosed(state: State, e: QuarterClosed): string | null {
+  const run = state.runs.get(e.run);
+  if (!run) return "Unknown run.";
+  if (run.closed) return "This run is already closed.";
+  if (localDateOf(new Date(e.t)) <= run.end) return "The run hasn't ended yet.";
+  if (!Number.isInteger(e.done) || !Number.isInteger(e.total) || e.done < 0 || e.done > e.total) return "Impossible counts.";
+  if (!isPrestigeTier(e.tier)) return "Unknown tier.";
+  run.closed = { done: e.done, total: e.total, tier: e.tier, at: e.t };
+  return null;
+}
+
+function prestigeSeen(state: State, e: PrestigeSeen): string | null {
+  const run = state.runs.get(e.run);
+  if (!run) return "Unknown run.";
+  if (!run.closed) return "This run isn't closed.";
+  if (run.seenAt) return "Already seen.";
+  run.seenAt = e.t;
   return null;
 }
 

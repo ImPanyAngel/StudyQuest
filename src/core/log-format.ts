@@ -1,4 +1,4 @@
-import { EVENT_TYPES, type QuestEvent } from "./events";
+import { EVENT_TYPES, eventRun, type QuestEvent } from "./events";
 
 type FieldType = "string" | "number";
 const S: FieldType = "string";
@@ -53,4 +53,20 @@ export function parseLog(text: string): QuestEvent[] {
 export function formatEvent(e: QuestEvent): string {
   const { id, t, type, ...rest } = e;
   return JSON.stringify({ id, t, type, ...rest });
+}
+
+/**
+ * One file's events in file order. Below a run's first close line, that run's
+ * events (other than prestige_seen) are dropped whatever their timestamp, so a
+ * line added later with an older time can't change a frozen run.
+ */
+export function dropAfterClose(events: QuestEvent[]): QuestEvent[] {
+  const closed = new Set<string>();
+  return events.filter((e) => {
+    if (e.type === "prestige_seen") return true;
+    const run = eventRun(e);
+    if (closed.has(run)) return false;
+    if (e.type === "quarter_closed") closed.add(run);
+    return true;
+  });
 }
