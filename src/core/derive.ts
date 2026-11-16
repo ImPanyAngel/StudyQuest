@@ -1,5 +1,6 @@
 import { addDays, type LocalDate } from "./dates";
 import { DATED_KINDS } from "./events";
+import type { PrestigeTier } from "./prestige";
 import { withinUndoWindow } from "./replay";
 import type { ObjectiveState, RunState, State } from "./state";
 
@@ -105,4 +106,50 @@ export function canCorrectRun(run: RunState, now: Date): boolean {
 
 export function examsDueForSat(s: State, today: LocalDate): ObjectiveState[] {
   return [...s.objectives.values()].filter((o) => o.kind === "exam" && !o.completed && !!o.date && o.date < today);
+}
+
+// ── prestige ────────────────────────────────────────────────────────────
+
+export function isClosed(run: RunState): boolean {
+  return run.closed !== undefined;
+}
+
+export interface Score {
+  done: number;
+  total: number;
+  pct: number | null;
+  /** Null until the run is closed. */
+  tier: PrestigeTier | null;
+}
+
+/** A closed run's frozen result, or the live progress of an open one. */
+export function runScore(s: State, run: string): Score {
+  const closed = s.runs.get(run)?.closed;
+  if (closed) return { done: closed.done, total: closed.total, pct: percent(closed.done, closed.total), tier: closed.tier };
+  return { ...runProgress(s, run), tier: null };
+}
+
+/** Objectives a closed run left open, in add order. */
+export function stains(s: State, run: string): ObjectiveState[] {
+  if (!s.runs.get(run)?.closed) return [];
+  return [...s.objectives.values()].filter((o) => o.run === run && !o.completed);
+}
+
+const byEnd = (a: RunState, b: RunState) => (a.end < b.end ? -1 : a.end > b.end ? 1 : 0);
+const byStart = (a: RunState, b: RunState) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0);
+
+export function runsDueToClose(s: State, today: LocalDate): RunState[] {
+  return [...s.runs.values()].filter((r) => !r.closed && runEnded(r, today)).sort(byEnd);
+}
+
+export function unseenPrestige(s: State): RunState[] {
+  return [...s.runs.values()].filter((r) => r.closed && !r.seenAt).sort(byEnd);
+}
+
+export function hallRuns(s: State): { open: RunState[]; closed: RunState[] } {
+  const runs = [...s.runs.values()];
+  return {
+    open: runs.filter((r) => !r.closed).sort(byStart),
+    closed: runs.filter((r) => r.closed).sort((a, b) => byEnd(b, a)),
+  };
 }

@@ -1,7 +1,8 @@
 import { localDateOf, type LocalDate } from "./dates";
-import { examsDueForSat, runEnded } from "./derive";
+import { examsDueForSat, runEnded, runProgress, runsDueToClose } from "./derive";
 import { BULK_KINDS, KIND_NAMES, type IdFactory, type Kind, type QuestEvent } from "./events";
 import { TYPE_CODES, objectiveId, runIdFromName } from "./ids";
+import { tierFor } from "./prestige";
 import { applyEvent } from "./replay";
 import { err, ok, type Result } from "./result";
 import type { State } from "./state";
@@ -15,7 +16,8 @@ export type Action =
   | { type: "bulkAddObjectives"; run: string; course: string; kind: Kind; prefix: string; from: number; to: number }
   | { type: "undoObjective"; obj: string }
   | { type: "selfCheck"; obj: string }
-  | { type: "checkStep"; obj: string; step: number };
+  | { type: "checkStep"; obj: string; step: number }
+  | { type: "acknowledgePrestige"; run: string };
 
 const MAX_BULK = 50;
 
@@ -50,13 +52,31 @@ export function planAutoSat(s: State, now: Date, newId: IdFactory): QuestEvent[]
   }));
 }
 
+/**
+ * The once-a-day events: passed exams marked sat, then a close for every run
+ * past its end date, counted with those sats applied. Ids come from `newId`
+ * in that order, so with a shared `t` the sats replay first.
+ */
+export function planDailyCheck(s: State, now: Date, newId: IdFactory): QuestEvent[] {
+  const sats = planAutoSat(s, now, newId);
+  const after = structuredClone(s);
+  for (const e of sats) applyEvent(after, e);
+  const t = now.toISOString();
+  const closes: QuestEvent[] = runsDueToClose(after, localDateOf(now)).map((r) => {
+    const p = runProgress(after, r.id);
+    return { id: newId(now), t, type: "quarter_closed", run: r.id, done: p.done, total: p.total, tier: tierFor(p.pct) };
+  });
+  return [...sats, ...closes];
+}
+
 function draftsFor(s: State, a: Action, now: Date): Result<Draft[]> {
   const today = localDateOf(now);
-  const ended = (run: string): boolean => {
+  // A closed run is reported as closed; one past its end date but not yet closed, as ended.
+  const blocked = (run: string): string | null => {
     const r = s.runs.get(run);
-    return !!r && runEnded(r, today);
+    if (r?.closed) return "This run is closed.";
+    return r && runEnded(r, today) ? "This run has ended." : null;
   };
-  const ENDED = "This run has ended.";
 
   switch (a.type) {
     case "createRun": {
@@ -68,12 +88,12 @@ function draftsFor(s: State, a: Action, now: Date): Result<Draft[]> {
     case "correctRunDates":
       return ok([{ type: "quarter_dates_corrected", run: a.run, start: a.start, end: a.end }]);
     case "addCourse":
-      if (ended(a.run)) return err(ENDED);
+      if (blocked(a.run)) return err(blocked(a.run)!);
       return ok([{ type: "course_added", run: a.run, course: a.code.trim(), name: a.name.trim(), folder: a.folder.trim() }]);
     case "undoCourse":
       return ok([{ type: "course_undone", run: a.run, course: a.code }]);
     case "addObjective": {
-      if (ended(a.run)) return err(ENDED);
+      if (blocked(a.run)) return err(blocked(a.run)!);
       const d: Draft = {
         type: "objective_added",
         obj: objectiveId(a.run, a.course, a.kind, nextNumber(s, a.run, a.course, a.kind)),
@@ -88,7 +108,7 @@ function draftsFor(s: State, a: Action, now: Date): Result<Draft[]> {
       return ok([d]);
     }
     case "bulkAddObjectives": {
-      if (ended(a.run)) return err(ENDED);
+      if (blocked(a.run)) return err(blocked(a.run)!);
       if (!BULK_KINDS.includes(a.kind)) return err("Bulk add works for lectures, labs and readings.");
       if (!Number.isInteger(a.from) || !Number.isInteger(a.to) || a.from < 1 || a.from > a.to) {
         return err("Pick a range like 1 to 14.");
@@ -115,15 +135,17 @@ function draftsFor(s: State, a: Action, now: Date): Result<Draft[]> {
     case "selfCheck": {
       const o = s.objectives.get(a.obj);
       if (!o) return err("Unknown objective.");
-      if (ended(o.run)) return err(ENDED);
+      if (blocked(o.run)) return err(blocked(o.run)!);
       if (o.kind === "exam") return err("Exams complete automatically once their date passes.");
       if (o.kind === "progress") return err("Check the steps one by one.");
       return ok([{ type: "objective_completed", obj: a.obj, tier: "silver" }]);
     }
+    case "acknowledgePrestige":
+      return ok([{ type: "prestige_seen", run: a.run }]);
     case "checkStep": {
       const o = s.objectives.get(a.obj);
       if (!o) return err("Unknown objective.");
-      if (ended(o.run)) return err(ENDED);
+      if (blocked(o.run)) return err(blocked(o.run)!);
       const drafts: Draft[] = [{ type: "step_completed", obj: a.obj, step: a.step }];
       const othersDone = o.stepsDone.every((done, i) => done || i === a.step);
       if (othersDone && !o.stepsDone[a.step]) drafts.push({ type: "objective_completed", obj: a.obj, tier: "silver" });
