@@ -2,6 +2,7 @@ import { ItemView, type WorkspaceLeaf } from "obsidian";
 import type { QuestStore } from "../store/quest-store";
 import { renderCourse } from "./course";
 import { renderHome } from "./home";
+import { renderSetup, type SetupUi } from "./setup";
 import type { Route } from "./parts";
 
 export const VIEW_TYPE = "studyquest-view";
@@ -9,6 +10,7 @@ export const VIEW_TYPE = "studyquest-view";
 export class StudyQuestView extends ItemView {
   private route: Route = { tab: "home" };
   private unsubscribe?: () => void;
+  private setupUi: SetupUi = { drafts: {} };
 
   constructor(
     leaf: WorkspaceLeaf,
@@ -31,6 +33,14 @@ export class StudyQuestView extends ItemView {
 
   async onOpen(): Promise<void> {
     this.unsubscribe = this.store.subscribe(() => this.refresh());
+    // Keeps undo countdowns and date locks current while Setup is open.
+    // Skipped while a field has focus so typing isn't interrupted.
+    this.registerInterval(
+      window.setInterval(() => {
+        const typing = this.contentEl.contains(document.activeElement) && document.activeElement?.matches("input, textarea, select");
+        if (this.route.tab === "setup" && !typing) this.refresh();
+      }, 30_000),
+    );
     this.refresh();
   }
 
@@ -68,7 +78,7 @@ export class StudyQuestView extends ItemView {
         renderCourse(body, this.store, this.route, nav, clock);
         break;
       case "setup":
-        body.createDiv({ cls: "sq-muted", text: "Setup arrives in a later build step." });
+        renderSetup(body, this.store, clock, this.setupUi, () => this.refresh());
         break;
     }
   }
