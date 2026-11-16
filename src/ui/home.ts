@@ -2,7 +2,7 @@ import { examWeek, formatShort, localDateOf, type Clock } from "../core/dates";
 import { courseProgress, currentRun, homeRows, isResit, runEnded, runProgress, type HomeRow } from "../core/derive";
 import type { QuestStore } from "../store/quest-store";
 import { openCompleteMenu } from "./complete-menu";
-import { renderObjectiveMeta, renderTypeTag, type Navigate } from "./parts";
+import { renderObjectiveMeta, renderSprite, renderTypeTag, type Navigate } from "./parts";
 
 export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, clock: Clock): void {
   const s = store.state;
@@ -47,8 +47,7 @@ export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, cl
   }
 
   const player = top.createDiv({ cls: "sq-player" });
-  const sprite = player.createDiv({ cls: "sq-sprite" });
-  for (const part of ["head", "body", "leg-l", "leg-r"]) sprite.createDiv({ cls: `sq-sprite-${part}` });
+  renderSprite(player);
 
   // ── objectives ──
   el.createEl("h4", { cls: "sq-section", text: "Objectives" });

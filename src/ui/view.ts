@@ -1,7 +1,9 @@
-import { ItemView, type WorkspaceLeaf } from "obsidian";
+import { ItemView, Notice, type WorkspaceLeaf } from "obsidian";
+import { runScore, unseenPrestige } from "../core/derive";
 import type { QuestStore } from "../store/quest-store";
 import { renderCourse } from "./course";
 import { renderHome } from "./home";
+import { renderPrestigeUp } from "./prestige-up";
 import { renderSetup, type SetupUi } from "./setup";
 import type { Route } from "./parts";
 
@@ -53,10 +55,27 @@ export class StudyQuestView extends ItemView {
     this.refresh();
   }
 
+  /** Setup with "New run…" selected. */
+  openSetupForNewRun(): void {
+    this.setupUi.run = "new";
+    this.navigate({ tab: "setup" });
+  }
+
   refresh(): void {
     const root = this.contentEl;
     root.empty();
     root.addClass("studyquest");
+
+    // A closed run nobody has seen yet takes over the whole view.
+    const unseen = unseenPrestige(this.store.state)[0];
+    if (unseen) {
+      renderPrestigeUp(root, unseen, runScore(this.store.state, unseen.id), async () => {
+        const r = await this.store.dispatch({ type: "acknowledgePrestige", run: unseen.id });
+        if (!r.ok) new Notice(r.error);
+        else if (unseenPrestige(this.store.state).length === 0) this.openSetupForNewRun();
+      });
+      return;
+    }
 
     const tabs = root.createDiv({ cls: "sq-tabs" });
     const tab = (label: string, r: Route, active: boolean) => {

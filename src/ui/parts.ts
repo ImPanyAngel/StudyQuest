@@ -19,3 +19,9 @@ export function renderObjectiveMeta(parent: HTMLElement, o: ObjectiveState, over
     parent.createSpan({ cls: "sq-date", text: `${label} ${formatShort(o.date)}` });
   }
 }
+
+/** The placeholder character until phase 6. */
+export function renderSprite(parent: HTMLElement): void {
+  const sprite = parent.createDiv({ cls: "sq-sprite" });
+  for (const part of ["head", "body", "leg-l", "leg-r"]) sprite.createDiv({ cls: `sq-sprite-${part}` });
+}

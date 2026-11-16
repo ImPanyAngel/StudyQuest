@@ -1,5 +1,6 @@
 import { Notice, Plugin } from "obsidian";
 import { nextLocalMidnight } from "./core/dates";
+import { unseenPrestige } from "./core/derive";
 import { DayTicker, QuestStore } from "./store/quest-store";
 import { VaultLog } from "./store/vault-log";
 import { StatusBadge } from "./ui/status-bar";
@@ -29,6 +30,7 @@ export default class StudyQuestPlugin extends Plugin {
       } catch (e) {
         new Notice(`StudyQuest couldn't read its log: ${e instanceof Error ? e.message : String(e)}`);
       }
+      await this.revealPrestige();
 
       let reload: number | undefined;
       for (const ref of log.onChange(() => {
@@ -63,6 +65,12 @@ export default class StudyQuestPlugin extends Plugin {
     for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE)) {
       if (leaf.view instanceof StudyQuestView) leaf.view.refresh();
     }
+    await this.revealPrestige();
+  }
+
+  /** Opens StudyQuest when a closed run's Prestige Up screen hasn't been seen yet. */
+  private async revealPrestige() {
+    if (unseenPrestige(this.store.state).length > 0) await this.openHome();
   }
 
   private async openHome() {
