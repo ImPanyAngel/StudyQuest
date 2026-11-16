@@ -101,3 +101,16 @@ test("runAutoSat writes sat for passed exams once, and zero on second run", asyn
   expect(log.count("objective_completed")).toBe(1);
   expect(store.state.objectives.get(`${Q2.run}/C1-EXM01`)!.completed?.tier).toBe("sat");
 });
+
+test("DayTicker fires once per new local day, including after a long sleep", async () => {
+  const { DayTicker } = await import("../../src/store/quest-store");
+  let t = new Date("2026-11-16T22:00:00.000Z"); // 23:00 CET
+  let calls = 0;
+  const ticker = new DayTicker(() => t, () => calls++);
+  ticker.check();
+  expect(calls).toBe(0);
+  t = new Date("2026-11-17T07:00:00.000Z"); // woke up 08:00 next day
+  ticker.check();
+  ticker.check();
+  expect(calls).toBe(1);
+});

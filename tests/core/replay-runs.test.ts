@@ -1,3 +1,4 @@
+import type { QuestEvent } from "../../src/core/events";
 import { applyEvent, replay, withinUndoWindow } from "../../src/core/replay";
 import { emptyState } from "../../src/core/state";
 import { Q2, at, ev } from "./fixtures";
@@ -85,4 +86,10 @@ test("rejected events leave state untouched", () => {
   const before = JSON.stringify([...s.runs.keys()]);
   applyEvent(s, ev.created("Overlap", "2026-12-01", "2027-02-01"));
   expect(JSON.stringify([...s.runs.keys()])).toBe(before);
+});
+
+test("replay never throws on a malformed event", () => {
+  const bad = { id: "e_bad", t: at(5), type: "quarter_created" } as unknown as QuestEvent;
+  expect(() => replay([ev.created(), bad])).not.toThrow();
+  expect(replay([ev.created(), bad]).runs.size).toBe(1);
 });

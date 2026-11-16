@@ -1,5 +1,5 @@
 import { planAction, planAutoSat, runOf, type Action } from "../core/actions";
-import type { Clock } from "../core/dates";
+import { localDateOf, type Clock } from "../core/dates";
 import { createIdFactory, type IdFactory, type QuestEvent } from "../core/events";
 import { formatEvent, parseLog } from "../core/log-format";
 import { replay } from "../core/replay";
@@ -93,5 +93,24 @@ export class QuestStore {
     const next = this.queue.then(task, task);
     this.queue = next.catch(() => undefined);
     return next;
+  }
+}
+
+/** Calls `onNewDay` the first time `check()` runs on a new local day. */
+export class DayTicker {
+  private last: string;
+
+  constructor(
+    private clock: Clock,
+    private onNewDay: () => void,
+  ) {
+    this.last = localDateOf(clock());
+  }
+
+  check(): void {
+    const today = localDateOf(this.clock());
+    if (today === this.last) return;
+    this.last = today;
+    this.onNewDay();
   }
 }

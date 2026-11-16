@@ -1,18 +1,11 @@
 import { formatShort } from "../core/dates";
-import type { Kind } from "../core/events";
+import { KIND_NAMES, type Kind } from "../core/events";
 import type { ObjectiveState } from "../core/state";
 
 export type Route = { tab: "home" } | { tab: "setup" } | { tab: "course"; run: string; course: string };
 export type Navigate = (r: Route) => void;
 
-export const KIND_LABELS: Record<Kind, string> = {
-  lecture: "Lecture",
-  assignment: "Assignment",
-  lab: "Lab",
-  reading: "Reading",
-  progress: "Progress",
-  exam: "Exam",
-};
+export const KIND_LABELS: Record<Kind, string> = KIND_NAMES;
 
 export function renderTypeTag(parent: HTMLElement, kind: Kind): void {
   parent.createSpan({ cls: "sq-tag", text: KIND_LABELS[kind].toUpperCase() });

@@ -1,6 +1,6 @@
 import { localDateOf, type LocalDate } from "./dates";
 import { examsDueForSat, runEnded } from "./derive";
-import { BULK_KINDS, type IdFactory, type Kind, type QuestEvent } from "./events";
+import { BULK_KINDS, KIND_NAMES, type IdFactory, type Kind, type QuestEvent } from "./events";
 import { TYPE_CODES, objectiveId, runIdFromName } from "./ids";
 import { applyEvent } from "./replay";
 import { err, ok, type Result } from "./result";
@@ -100,7 +100,7 @@ function draftsFor(s: State, a: Action, now: Date): Result<Draft[]> {
         return err("Pick a range like 1 to 14.");
       }
       if (a.to - a.from + 1 > MAX_BULK) return err(`Bulk add is limited to ${MAX_BULK} at a time.`);
-      const prefix = a.prefix.trim();
+      const prefix = a.prefix.trim() || KIND_NAMES[a.kind];
       const first = nextNumber(s, a.run, a.course, a.kind);
       const drafts: Draft[] = [];
       for (let n = a.from, i = 0; n <= a.to; n++, i++) {

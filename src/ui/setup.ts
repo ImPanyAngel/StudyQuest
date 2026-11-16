@@ -15,6 +15,7 @@ import { BULK_KINDS, DATED_KINDS, KINDS, type Kind } from "../core/events";
 import { runIdFromName } from "../core/ids";
 import type { QuestStore } from "../store/quest-store";
 import { KIND_LABELS, renderObjectiveMeta, renderTypeTag } from "./parts";
+import { singleFlight } from "./single-flight";
 
 /** Setup's own UI state, kept on the view so re-renders don't lose typed input. */
 export interface SetupUi {
@@ -67,7 +68,7 @@ export function renderSetup(el: HTMLElement, store: QuestStore, clock: Clock, ui
     labelled(row, "End", field(row, "run.end", { type: "date" }));
     button(row, "Create run", () => {
       const id = runIdFromName(name.value);
-      void act({ type: "createRun", name: name.value, start: ui.drafts["run.start"] ?? "", end: ui.drafts["run.end"] ?? "" }, () => {
+      return act({ type: "createRun", name: name.value, start: ui.drafts["run.start"] ?? "", end: ui.drafts["run.end"] ?? "" }, () => {
         if (id.ok) ui.run = id.value;
         clear("run.name", "run.start", "run.end");
       });
@@ -121,7 +122,7 @@ export function renderSetup(el: HTMLElement, store: QuestStore, clock: Clock, ui
     field(row, "course.folder", { placeholder: "Vault folder (default: CODE/)" });
     button(row, "Add course", () => {
       const c = code.value.trim();
-      void act(
+      return act(
         {
           type: "addCourse",
           run: run.id,
@@ -190,7 +191,7 @@ export function renderSetup(el: HTMLElement, store: QuestStore, clock: Clock, ui
     const a: Action = { type: "addObjective", run: run.id, course, kind, title: ui.drafts["obj.title"] ?? "" };
     if (DATED_KINDS.includes(kind)) a.date = ui.drafts["obj.date"] ?? "";
     if (kind === "progress") a.steps = (ui.drafts["obj.steps"] ?? "").split("\n").filter((x) => x.trim());
-    void act(a, () => clear("obj.title", "obj.date", "obj.steps"));
+    return act(a, () => clear("obj.title", "obj.date", "obj.steps"));
   });
   if (kind === "exam") s3.createDiv({ cls: "sq-hint", text: `Exam dates must fall in exam week (${formatShort(week.from)} → ${formatShort(week.to)}). Exams complete themselves as SAT once the date passes.` });
 
@@ -209,7 +210,7 @@ export function renderSetup(el: HTMLElement, store: QuestStore, clock: Clock, ui
         run: run.id,
         course,
         kind: (ui.drafts["bulk.kind"] as Kind) ?? "lecture",
-        prefix: ui.drafts["bulk.prefix"] ?? KIND_LABELS[bulkKind],
+        prefix: ui.drafts["bulk.prefix"] ?? "",
         from: Number(ui.drafts["bulk.from"] ?? 1),
         to: Number(ui.drafts["bulk.to"] ?? 0),
       },
@@ -231,7 +232,15 @@ function labelled(parent: HTMLElement, label: string, input: HTMLElement): void 
 
 function button(parent: HTMLElement, text: string, onClick: () => unknown): HTMLButtonElement {
   const b = parent.createEl("button", { text, cls: "sq-btn" });
-  b.onClickEvent(() => void onClick());
+  const once = singleFlight(async () => {
+    b.disabled = true;
+    try {
+      await onClick();
+    } finally {
+      b.disabled = false;
+    }
+  });
+  b.onClickEvent(() => void once());
   return b;
 }
 

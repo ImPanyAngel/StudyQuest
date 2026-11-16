@@ -56,7 +56,13 @@ export function replay(events: QuestEvent[]): State {
   const unique = events.filter((e) => (seen.has(e.id) ? false : (seen.add(e.id), true)));
   unique.sort((a, b) => (a.t < b.t ? -1 : a.t > b.t ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const state = emptyState();
-  for (const e of unique) applyEvent(state, e);
+  for (const e of unique) {
+    try {
+      applyEvent(state, e);
+    } catch {
+      // A malformed event is ignored like any other rejected one.
+    }
+  }
   return state;
 }
 

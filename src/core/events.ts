@@ -4,6 +4,14 @@ export type Kind = "lecture" | "assignment" | "lab" | "reading" | "progress" | "
 export const KINDS: Kind[] = ["lecture", "assignment", "lab", "reading", "progress", "exam"];
 export const DATED_KINDS: Kind[] = ["assignment", "exam"];
 export const BULK_KINDS: Kind[] = ["lecture", "lab", "reading"];
+export const KIND_NAMES: Record<Kind, string> = {
+  lecture: "Lecture",
+  assignment: "Assignment",
+  lab: "Lab",
+  reading: "Reading",
+  progress: "Progress",
+  exam: "Exam",
+};
 
 /** Gold arrives in phase 4. */
 export type Tier = "silver" | "sat";

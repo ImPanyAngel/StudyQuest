@@ -118,3 +118,8 @@ test("runOf", () => {
   expect(runOf(ev.course(R, "C2"), s)).toBe(R);
   expect(runOf(ev.completed(l.obj, "silver", at(3)), s)).toBe(R);
 });
+
+test("bulk add with a blank prefix uses the type's own name", () => {
+  const r = run(base(), { type: "bulkAddObjectives", run: R, course: "C1", kind: "lab", prefix: "  ", from: 1, to: 2 }, min(2));
+  expect(r.events.map((e) => (e as { title: string }).title)).toEqual(["Lab 1", "Lab 2"]);
+});
