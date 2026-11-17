@@ -23,7 +23,12 @@
   padding: 16px 20px;
 }
 
-.studyquest .sq-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--sq-line); margin-bottom: 18px; }
+/* Sticky: stays at the top of the view while the content scrolls under it. The negative
+   margins stretch its background across the view's padding so nothing shows through. */
+.studyquest .sq-tabs {
+  display: flex; gap: 4px; border-bottom: 1px solid var(--sq-line); margin: -16px -20px 18px; padding: 12px 20px 0;
+  position: sticky; top: 0; z-index: 2; background: var(--sq-bg);
+}
 .studyquest .sq-tab { padding: 6px 14px; font-size: 12px; color: var(--sq-muted); cursor: pointer; border: 1px solid transparent; border-bottom: none; border-radius: 4px 4px 0 0; }
 .studyquest .sq-tab:hover { color: var(--sq-fg); }
 .studyquest .sq-tab.is-active { color: var(--sq-fg); border-color: var(--sq-line); background: var(--sq-hover); }
