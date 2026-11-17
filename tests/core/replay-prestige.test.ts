@@ -17,7 +17,9 @@ function base() {
 test("close is applied only once the Amsterdam date is after the end date", () => {
   const { events } = base();
   expect(replay([...events, ev.closed(R, 1, 2, 0, "2027-01-30T22:59:00.000Z")]).runs.get(R)!.closed).toBeUndefined();
-  expect(replay([...events, ev.closed(R, 1, 2, 0, "2027-01-30T23:00:00.000Z")]).runs.get(R)!.closed).toEqual({
+  const ok = ev.closed(R, 1, 2, 0, "2027-01-30T23:00:00.000Z");
+  expect(replay([...events, ok]).runs.get(R)!.closed).toEqual({
+    id: ok.id,
     done: 1,
     total: 2,
     tier: 0,
@@ -101,10 +103,25 @@ test("dropAfterClose drops a run's lines below its close, whatever their time", 
   const backdated = ev.completed(l2.obj, "silver", at(5));
   const seen = ev.seen(R, "2027-01-31T08:05:00.000Z");
   const otherRun = ev.course("2026-27-Q3", "C9", at(6));
-  expect(dropAfterClose([...events, close, backdated, otherRun, seen])).toEqual([...events, close, otherRun, seen]);
+  expect(dropAfterClose([...events, close, backdated, otherRun, seen], new Set([close.id]))).toEqual([...events, close, otherRun, seen]);
 });
 
 test("dropAfterClose leaves a file without a close alone", () => {
   const { events } = base();
-  expect(dropAfterClose(events)).toEqual(events);
+  expect(dropAfterClose(events, new Set())).toEqual(events);
+});
+
+test("dropAfterClose only cuts at an accepted close", () => {
+  const { events, l2 } = base();
+  const invalid = ev.closed(R, 3, 2, 0, DAY31); // done > total: replay rejects it
+  const later = ev.completed(l2.obj, "silver", at(5));
+  expect(dropAfterClose([...events, invalid, later], new Set())).toEqual([...events, invalid, later]);
+  expect(dropAfterClose([...events, invalid, later], new Set([invalid.id]))).toEqual([...events, invalid]);
+});
+
+test("replay records which close was accepted", () => {
+  const { events } = base();
+  const bad = ev.closed(R, 3, 2, 0, DAY31);
+  const good = ev.closed(R, 1, 2, 0, "2027-01-31T09:00:00.000Z");
+  expect(replay([...events, bad, good]).runs.get(R)!.closed!.id).toBe(good.id);
 });

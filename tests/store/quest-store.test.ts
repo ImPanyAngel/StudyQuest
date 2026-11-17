@@ -164,3 +164,23 @@ test("two concurrent acknowledges write one prestige_seen", async () => {
   expect([x.ok, y.ok].sort()).toEqual([false, true]);
   expect(log.count("prestige_seen")).toBe(1);
 });
+
+test("an invalid close line doesn't hide later work or bring Prestige Up back", async () => {
+  const { log, store } = await setup();
+  // A malformed close (done > total) lands in the file before the run has ended.
+  const bad = JSON.stringify({ id: "e_00000000000000000000000001", t: "2027-01-31T08:00:00.000Z", type: "quarter_closed", run: Q2.run, done: 9, total: 1, tier: 0 });
+  log.files.set(Q2.run, log.files.get(Q2.run)! + bad + "\n");
+  await store.load();
+  await store.dispatch({ type: "addCourse", run: Q2.run, code: "C2", name: "Course 2", folder: "C2/" });
+  await store.load();
+  expect(store.state.runs.get(Q2.run)!.courses.has("C2")).toBe(true);
+
+  now = new Date("2027-01-31T10:00:00.000Z");
+  expect(await store.runDailyCheck()).toBe(1);
+  await store.dispatch({ type: "acknowledgePrestige", run: Q2.run });
+  const again = new QuestStore(log, clock);
+  await again.load();
+  expect(await again.runDailyCheck()).toBe(0);
+  expect(unseenPrestige(again.state)).toEqual([]);
+  expect(log.count("quarter_closed")).toBe(2); // the bad one plus one real close
+});

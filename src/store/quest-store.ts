@@ -38,7 +38,11 @@ export class QuestStore {
   load(): Promise<void> {
     return this.serial(async () => {
       const texts = await this.log.readAll();
-      this.events = texts.flatMap((text) => dropAfterClose(parseLog(text)));
+      const files = texts.map(parseLog);
+      // Replay once to learn which close lines are valid; only those cut their file.
+      const accepted = new Set<string>();
+      for (const r of replay(files.flat()).runs.values()) if (r.closed) accepted.add(r.closed.id);
+      this.events = files.flatMap((events) => dropAfterClose(events, accepted));
       this.current = replay(this.events);
       this.notify();
     });

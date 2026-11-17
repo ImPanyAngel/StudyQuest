@@ -132,7 +132,7 @@ function quarterClosed(state: State, e: QuarterClosed): string | null {
   if (localDateOf(new Date(e.t)) <= run.end) return "The run hasn't ended yet.";
   if (!Number.isInteger(e.done) || !Number.isInteger(e.total) || e.done < 0 || e.done > e.total) return "Impossible counts.";
   if (!isPrestigeTier(e.tier)) return "Unknown tier.";
-  run.closed = { done: e.done, total: e.total, tier: e.tier, at: e.t };
+  run.closed = { id: e.id, done: e.done, total: e.total, tier: e.tier, at: e.t };
   return null;
 }
 

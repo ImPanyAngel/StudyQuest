@@ -56,17 +56,18 @@ export function formatEvent(e: QuestEvent): string {
 }
 
 /**
- * One file's events in file order. Below a run's first close line, that run's
- * events (other than prestige_seen) are dropped whatever their timestamp, so a
- * line added later with an older time can't change a frozen run.
+ * One file's events in file order. Below a run's accepted close (its id is in
+ * `acceptedCloses`), that run's events other than prestige_seen are dropped
+ * whatever their timestamp, so a line added later with an older time can't
+ * change a frozen run. A close line replay rejected cuts nothing.
  */
-export function dropAfterClose(events: QuestEvent[]): QuestEvent[] {
+export function dropAfterClose(events: QuestEvent[], acceptedCloses: Set<string>): QuestEvent[] {
   const closed = new Set<string>();
   return events.filter((e) => {
     if (e.type === "prestige_seen") return true;
     const run = eventRun(e);
     if (closed.has(run)) return false;
-    if (e.type === "quarter_closed") closed.add(run);
+    if (e.type === "quarter_closed" && acceptedCloses.has(e.id)) closed.add(run);
     return true;
   });
 }

@@ -18,7 +18,7 @@ export interface RunState {
   /** Active courses by code, in the order added. */
   courses: Map<string, CourseState>;
   /** Set by `quarter_closed`: the frozen result. */
-  closed?: { done: number; total: number; tier: PrestigeTier; at: string };
+  closed?: { id: string; done: number; total: number; tier: PrestigeTier; at: string };
   /** Set by `prestige_seen`. */
   seenAt?: string;
 }
