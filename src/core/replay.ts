@@ -1,6 +1,7 @@
 import { daysBetween, examWeek, isLocalDate, localDateOf, type LocalDate } from "./dates";
 import {
   DATED_KINDS,
+  EVIDENCE_KINDS,
   KINDS,
   type CourseAdded,
   type CourseUndone,
@@ -12,6 +13,8 @@ import {
   type QuarterCreated,
   type QuarterDatesCorrected,
   type QuestEvent,
+  type ReadingBumpUndone,
+  type ReadingBumped,
   type StepCompleted,
   eventRun,
 } from "./events";
@@ -56,6 +59,10 @@ export function applyEvent(state: State, e: QuestEvent): string | null {
       return quarterClosed(state, e);
     case "prestige_seen":
       return prestigeSeen(state, e);
+    case "reading_bumped":
+      return readingBumped(state, e);
+    case "reading_bump_undone":
+      return readingBumpUndone(state, e);
     default:
       return "Unknown event type.";
   }
@@ -202,6 +209,14 @@ function objectiveAdded(state: State, e: ObjectiveAdded): string | null {
     if (e.steps.some((s) => typeof s !== "string" || !s.trim())) return "Steps can't be empty.";
   }
 
+  let levels: string[] | undefined;
+  if (e.levels !== undefined) {
+    if (e.kind !== "reading") return "Only readings have levels.";
+    if (!Array.isArray(e.levels) || e.levels.length < 1 || e.levels.length > 2) return "A reading has one or two levels.";
+    levels = e.levels.map((l) => (typeof l === "string" ? l.trim() : ""));
+    if (levels.some((l) => !l)) return "Level names can't be empty.";
+  }
+
   const o: ObjectiveState = {
     id: e.obj,
     run: e.run,
@@ -210,13 +225,14 @@ function objectiveAdded(state: State, e: ObjectiveAdded): string | null {
     title: e.title,
     source: "manual",
     stepsDone: e.steps ? e.steps.map(() => false) : [],
-    position: [],
+    position: levels ? levels.map(() => 0) : [],
     bumps: [],
     bumped: false,
     addedAt: e.t,
   };
   if (e.date !== undefined) o.date = e.date;
   if (e.steps !== undefined) o.steps = [...e.steps];
+  if (levels) o.levels = levels;
   state.objectives.set(o.id, o);
   state.everObjectiveIds.add(o.id);
   return null;
@@ -255,7 +271,43 @@ function objectiveCompleted(state: State, e: ObjectiveCompleted): string | null 
   } else {
     return "Unknown completion tier.";
   }
+  if (e.evidence !== undefined) {
+    if (e.tier !== "silver" || !EVIDENCE_KINDS.includes(o.kind)) return "Only lecture, assignment and lab silvers take evidence.";
+    if (typeof e.evidence !== "string" || !e.evidence) return "Evidence needs a file path.";
+    // A file already claimed by an earlier completion: keep the silver, drop only the claim.
+    if (state.evidenceOwners.has(e.evidence)) {
+      o.completed = { tier: e.tier, at: e.t };
+      return null;
+    }
+    state.evidenceOwners.set(e.evidence, o.id);
+    o.completed = { tier: e.tier, at: e.t, evidence: e.evidence };
+    return null;
+  }
   o.completed = { tier: e.tier, at: e.t };
+  return null;
+}
+
+function readingBumped(state: State, e: ReadingBumped): string | null {
+  const o = state.objectives.get(e.obj);
+  if (!o) return "Unknown objective.";
+  if (o.kind !== "reading" || !o.levels) return "Only readings with levels can be bumped.";
+  if (o.completed) return "This reading is finished.";
+  if (!Number.isInteger(e.level) || e.level < 0 || e.level >= o.levels.length) return "Unknown level.";
+  o.bumps.push({ at: e.t, before: [...o.position] });
+  o.position = o.position.map((n, i) => (i < e.level ? n : i === e.level ? n + 1 : 0));
+  o.bumped = true;
+  return null;
+}
+
+function readingBumpUndone(state: State, e: ReadingBumpUndone): string | null {
+  const o = state.objectives.get(e.obj);
+  if (!o) return "Unknown objective.";
+  if (o.completed) return "This reading is finished.";
+  const last = o.bumps[o.bumps.length - 1];
+  if (!last) return "Nothing to undo.";
+  if (!withinUndoWindow(last.at, e.t)) return "The undo window for this bump has passed.";
+  o.bumps.pop();
+  o.position = last.before;
   return null;
 }
 
@@ -266,6 +318,6 @@ function objectivesOfRun(state: State, run: string): ObjectiveState[] {
 }
 
 function hasProgress(o: ObjectiveState): boolean {
-  return o.completed !== undefined || o.stepsDone.some(Boolean);
+  return o.completed !== undefined || o.stepsDone.some(Boolean) || o.bumped;
 }
 
