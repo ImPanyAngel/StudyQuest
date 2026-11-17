@@ -1,11 +1,12 @@
 import { formatShort } from "../core/dates";
-import { courseObjectives, courseProgress, runScore, stains } from "../core/derive";
+import type { App } from "obsidian";
+import { courseObjectives, courseProgress, objectiveLabel, runScore, stains } from "../core/derive";
 import { tierLabel } from "../core/prestige";
 import type { QuestStore } from "../store/quest-store";
-import { renderMark, renderObjectiveMeta, renderTypeTag, stainLabel, type Navigate, type Route } from "./parts";
+import { renderEvidence, renderMark, renderObjectiveMeta, renderTypeTag, stainLabel, type Navigate, type Route } from "./parts";
 
 /** Every objective of one run, grouped by course. Read only. */
-export function renderRunPage(el: HTMLElement, store: QuestStore, route: Extract<Route, { tab: "run" }>, nav: Navigate): void {
+export function renderRunPage(el: HTMLElement, store: QuestStore, route: Extract<Route, { tab: "run" }>, nav: Navigate, app: App): void {
   const s = store.state;
   el.createDiv({ cls: "sq-back", text: "← Hall" }).onClickEvent(() => nav({ tab: "hall" }));
   const run = s.runs.get(route.run);
@@ -34,9 +35,10 @@ export function renderRunPage(el: HTMLElement, store: QuestStore, route: Extract
       const row = box.createDiv({ cls: "sq-obj-row" });
       if (o.completed) row.addClass("is-done");
       renderTypeTag(row, o.kind);
-      row.createSpan({ cls: "sq-obj-title", text: o.title });
+      row.createSpan({ cls: "sq-obj-title", text: objectiveLabel(o) });
       renderObjectiveMeta(row, o);
       renderMark(row, o, closed);
+      renderEvidence(row, o, app);
     }
   }
 }

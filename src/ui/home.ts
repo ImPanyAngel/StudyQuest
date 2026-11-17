@@ -1,6 +1,6 @@
 import type { App } from "obsidian";
 import { examWeek, formatShort, localDateOf, type Clock } from "../core/dates";
-import { courseProgress, currentRun, homeRows, isResit, runEnded, runProgress, runScore, type HomeRow } from "../core/derive";
+import { courseProgress, currentRun, homeRows, isResit, objectiveLabel, runEnded, runProgress, runScore, type HomeRow } from "../core/derive";
 import { tierLabel } from "../core/prestige";
 import type { QuestStore } from "../store/quest-store";
 import { openCompleteMenu } from "./complete-menu";
@@ -79,7 +79,7 @@ function renderRow(box: HTMLElement, r: HomeRow, store: QuestStore, ended: boole
   if (r.overdue) row.addClass("is-overdue");
   if (r.soon) row.addClass("is-soon");
   renderTypeTag(row, r.obj.kind);
-  row.createSpan({ cls: "sq-obj-title", text: `${r.obj.course} · ${r.obj.title}` });
+  row.createSpan({ cls: "sq-obj-title", text: `${r.obj.course} · ${objectiveLabel(r.obj)}` });
   renderObjectiveMeta(row, r.obj, r.overdue);
   if (r.clickable && !ended) {
     row.addClass("is-clickable");

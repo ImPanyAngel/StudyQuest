@@ -139,3 +139,6 @@
 /* ── evidence picker (Obsidian modal, outside .studyquest) ── */
 .sq-evidence-used { opacity: 0.45; }
 .sq-evidence-owner { font-size: 11px; color: var(--text-muted); }
+.studyquest .sq-evidence { font-size: 12px; color: var(--sq-accent); text-decoration: none; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.studyquest .sq-evidence:hover { text-decoration: underline; }
+.studyquest .sq-evidence.is-missing { color: var(--sq-faint); text-decoration: line-through; }

@@ -1,4 +1,4 @@
-import { Notice } from "obsidian";
+import { Notice, type App } from "obsidian";
 import type { Action } from "../core/actions";
 import { examWeek, formatShort, localDateOf, type Clock } from "../core/dates";
 import {
@@ -7,16 +7,17 @@ import {
   canUndoObjective,
   courseObjectives,
   currentRun,
+  objectiveLabel,
   isResit,
   runEnded,
   runScore,
   undoDeadline,
 } from "../core/derive";
 import { tierLabel } from "../core/prestige";
-import { BULK_KINDS, DATED_KINDS, KINDS, type Kind } from "../core/events";
+import { ADDABLE_KINDS, BULK_KINDS, DATED_KINDS, type Kind } from "../core/events";
 import { runIdFromName } from "../core/ids";
 import type { QuestStore } from "../store/quest-store";
-import { KIND_LABELS, renderMark, renderObjectiveMeta, renderTypeTag } from "./parts";
+import { KIND_LABELS, renderEvidence, renderMark, renderObjectiveMeta, renderTypeTag } from "./parts";
 import { singleFlight } from "./single-flight";
 
 /** Setup's own UI state, kept on the view so re-renders don't lose typed input. */
@@ -26,7 +27,7 @@ export interface SetupUi {
   drafts: Record<string, string>;
 }
 
-export function renderSetup(el: HTMLElement, store: QuestStore, clock: Clock, ui: SetupUi, rerender: () => void): void {
+export function renderSetup(el: HTMLElement, store: QuestStore, clock: Clock, ui: SetupUi, rerender: () => void, app: App): void {
   const s = store.state;
   const now = clock();
   const today = localDateOf(now);
@@ -172,17 +173,19 @@ export function renderSetup(el: HTMLElement, store: QuestStore, clock: Clock, ui
   for (const o of objs) {
     const row = list.createDiv({ cls: "sq-obj-row" });
     renderTypeTag(row, o.kind);
-    row.createSpan({ cls: "sq-obj-title", text: o.title });
+    row.createSpan({ cls: "sq-obj-title", text: objectiveLabel(o) });
     renderObjectiveMeta(row, o);
     if (o.completed || closed) renderMark(row, o, closed);
+    renderEvidence(row, o, app);
     if (!closed && canUndoObjective(o, now)) button(row, `Undo · ${minutesLeft(o.addedAt)} min left`, () => act({ type: "undoObjective", obj: o.id }));
   }
   if (ended) return;
 
   // Add one
-  const kind = (ui.drafts["obj.kind"] as Kind) ?? "lecture";
+  const drafted = ui.drafts["obj.kind"] as Kind | undefined;
+  const kind: Kind = drafted && ADDABLE_KINDS.includes(drafted) ? drafted : "lecture";
   const add = s3.createDiv({ cls: "sq-form" });
-  kindSelect(add, KINDS, kind, (k) => {
+  kindSelect(add, ADDABLE_KINDS, kind, (k) => {
     ui.drafts["obj.kind"] = k;
     rerender();
   });
@@ -190,17 +193,14 @@ export function renderSetup(el: HTMLElement, store: QuestStore, clock: Clock, ui
   if (DATED_KINDS.includes(kind)) {
     labelled(add, kind === "exam" ? "Exam date" : "Due date", field(add, "obj.date", { type: "date" }));
   }
-  let steps: HTMLTextAreaElement | undefined;
-  if (kind === "progress") {
-    steps = add.createEl("textarea", { cls: "sq-input sq-steps-input", attr: { rows: "3", placeholder: "One step per line" } });
-    steps.value = ui.drafts["obj.steps"] ?? "";
-    steps.addEventListener("input", () => (ui.drafts["obj.steps"] = steps!.value));
+  if (kind === "reading") {
+    labelled(add, "Levels", field(add, "obj.levels", { placeholder: "Chapter, or Course, Chapter", value: "Chapter" }));
   }
   button(add, "Add objective", () => {
     const a: Action = { type: "addObjective", run: run.id, course, kind, title: ui.drafts["obj.title"] ?? "" };
     if (DATED_KINDS.includes(kind)) a.date = ui.drafts["obj.date"] ?? "";
-    if (kind === "progress") a.steps = (ui.drafts["obj.steps"] ?? "").split("\n").filter((x) => x.trim());
-    return act(a, () => clear("obj.title", "obj.date", "obj.steps"));
+    if (kind === "reading") a.levels = (ui.drafts["obj.levels"] ?? "Chapter").split(",");
+    return act(a, () => clear("obj.title", "obj.date", "obj.levels"));
   });
   if (kind === "exam") s3.createDiv({ cls: "sq-hint", text: `Exam dates must fall in exam week (${formatShort(week.from)} → ${formatShort(week.to)}). Exams complete themselves as SAT once the date passes.` });
 

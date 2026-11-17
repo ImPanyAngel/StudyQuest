@@ -1,9 +1,9 @@
 import type { App } from "obsidian";
 import { localDateOf, type Clock } from "../core/dates";
-import { courseObjectives, courseProgress, isResit, runEnded } from "../core/derive";
+import { courseObjectives, courseProgress, isResit, objectiveLabel, runEnded } from "../core/derive";
 import type { QuestStore } from "../store/quest-store";
 import { openCompleteMenu } from "./complete-menu";
-import { renderMark, renderObjectiveMeta, renderTypeTag, type Navigate, type Route } from "./parts";
+import { renderEvidence, renderMark, renderObjectiveMeta, renderTypeTag, type Navigate, type Route } from "./parts";
 
 export function renderCourse(
   el: HTMLElement,
@@ -42,10 +42,11 @@ export function renderCourse(
   for (const o of objs) {
     const row = box.createDiv({ cls: "sq-obj-row" });
     renderTypeTag(row, o.kind);
-    row.createSpan({ cls: "sq-obj-title", text: o.title });
+    row.createSpan({ cls: "sq-obj-title", text: objectiveLabel(o) });
     renderObjectiveMeta(row, o);
     const tier = o.completed?.tier;
     renderMark(row, o, closed);
+    renderEvidence(row, o, app);
     if (tier) {
       row.addClass("is-done");
     } else if (o.kind !== "exam" && !ended && !closed) {

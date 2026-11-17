@@ -101,13 +101,13 @@ export class StudyQuestView extends ItemView {
         renderCourse(body, this.store, this.route, nav, clock, this.app);
         break;
       case "setup":
-        renderSetup(body, this.store, clock, this.setupUi, () => this.refresh());
+        renderSetup(body, this.store, clock, this.setupUi, () => this.refresh(), this.app);
         break;
       case "hall":
         renderHall(body, this.store, nav, clock);
         break;
       case "run":
-        renderRunPage(body, this.store, this.route, nav);
+        renderRunPage(body, this.store, this.route, nav, this.app);
         break;
     }
   }
