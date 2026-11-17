@@ -1,11 +1,35 @@
-import { Menu, Notice } from "obsidian";
+import { Menu, Notice, type App } from "obsidian";
 import type { Action } from "../core/actions";
+import { bumpDeadline, canUndoBump } from "../core/derive";
+import { EVIDENCE_KINDS } from "../core/events";
 import type { ObjectiveState } from "../core/state";
 import type { QuestStore } from "../store/quest-store";
+import { EvidencePicker } from "./evidence-picker";
 
-/** The "Complete?" menu for an open, non-exam objective. */
-export function openCompleteMenu(evt: MouseEvent, obj: ObjectiveState, store: QuestStore): void {
+/** The click menu for an open, non-exam objective. */
+export function openCompleteMenu(evt: MouseEvent, obj: ObjectiveState, store: QuestStore, app: App): void {
   const menu = new Menu();
+
+  if (obj.kind === "reading") {
+    menu.addItem((i) => i.setTitle(obj.title).setIsLabel(true));
+    const levels = obj.levels ?? [];
+    // Innermost level first: "Next chapter" before "Next course".
+    for (let level = levels.length - 1; level >= 0; level--) {
+      const inner = levels.slice(level + 1);
+      const reset = inner.length ? ` (${inner.join(", ")} back to 0)` : "";
+      const title = `Next ${levels[level].toLowerCase()} → ${levels[level]} ${obj.position[level] + 1}${reset}`;
+      menu.addItem((i) => i.setTitle(title).setIcon("chevron-right").onClick(() => run(store, { type: "bumpReading", obj: obj.id, level })));
+    }
+    const now = store.clock();
+    if (canUndoBump(obj, now)) {
+      const left = Math.max(1, Math.ceil((bumpDeadline(obj)!.getTime() - now.getTime()) / 60_000));
+      menu.addItem((i) => i.setTitle(`Undo last bump · ${left} min left`).setIcon("undo").onClick(() => run(store, { type: "undoBump", obj: obj.id })));
+    }
+    menu.addItem((i) => i.setTitle("Finished → silver").setIcon("check").onClick(() => run(store, { type: "selfCheck", obj: obj.id })));
+    menu.showAtMouseEvent(evt);
+    return;
+  }
+
   menu.addItem((i) => i.setTitle("Complete?").setIsLabel(true));
   menu.addItem((i) => i.setTitle("AI check — arrives in phase 4").setIcon("sparkles").setDisabled(true));
 
@@ -18,12 +42,12 @@ export function openCompleteMenu(evt: MouseEvent, obj: ObjectiveState, store: Qu
         else i.onClick(() => run(store, { type: "checkStep", obj: obj.id, step }));
       });
     });
-  } else {
+  } else if (EVIDENCE_KINDS.includes(obj.kind)) {
     menu.addItem((i) =>
       i
-        .setTitle("Self check → silver")
-        .setIcon("check")
-        .onClick(() => run(store, { type: "selfCheck", obj: obj.id })),
+        .setTitle("Pick evidence file → silver…")
+        .setIcon("file-check")
+        .onClick(() => new EvidencePicker(app, store, obj).open()),
     );
   }
   menu.showAtMouseEvent(evt);

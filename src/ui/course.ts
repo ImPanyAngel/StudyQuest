@@ -1,3 +1,4 @@
+import type { App } from "obsidian";
 import { localDateOf, type Clock } from "../core/dates";
 import { courseObjectives, courseProgress, isResit, runEnded } from "../core/derive";
 import type { QuestStore } from "../store/quest-store";
@@ -10,6 +11,7 @@ export function renderCourse(
   route: Extract<Route, { tab: "course" }>,
   nav: Navigate,
   clock: Clock,
+  app: App,
 ): void {
   const s = store.state;
   const run = s.runs.get(route.run);
@@ -48,7 +50,7 @@ export function renderCourse(
       row.addClass("is-done");
     } else if (o.kind !== "exam" && !ended && !closed) {
       row.addClass("is-clickable");
-      row.onClickEvent((evt) => openCompleteMenu(evt, o, store));
+      row.onClickEvent((evt) => openCompleteMenu(evt, o, store, app));
     }
   }
 }

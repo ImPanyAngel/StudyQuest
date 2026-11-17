@@ -95,10 +95,10 @@ export class StudyQuestView extends ItemView {
     const clock = this.store.clock;
     switch (this.route.tab) {
       case "home":
-        renderHome(body, this.store, nav, clock);
+        renderHome(body, this.store, nav, clock, this.app);
         break;
       case "course":
-        renderCourse(body, this.store, this.route, nav, clock);
+        renderCourse(body, this.store, this.route, nav, clock, this.app);
         break;
       case "setup":
         renderSetup(body, this.store, clock, this.setupUi, () => this.refresh());

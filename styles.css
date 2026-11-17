@@ -135,3 +135,7 @@
 .studyquest .sq-run-title { font-size: 16px; font-weight: 600; }
 .studyquest .sq-mark.is-stain { border-color: var(--sq-overdue); color: var(--sq-overdue); }
 .studyquest .sq-closed-score { font-size: 28px; font-weight: 700; }
+
+/* ── evidence picker (Obsidian modal, outside .studyquest) ── */
+.sq-evidence-used { opacity: 0.45; }
+.sq-evidence-owner { font-size: 11px; color: var(--text-muted); }

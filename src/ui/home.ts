@@ -1,3 +1,4 @@
+import type { App } from "obsidian";
 import { examWeek, formatShort, localDateOf, type Clock } from "../core/dates";
 import { courseProgress, currentRun, homeRows, isResit, runEnded, runProgress, runScore, type HomeRow } from "../core/derive";
 import { tierLabel } from "../core/prestige";
@@ -5,7 +6,7 @@ import type { QuestStore } from "../store/quest-store";
 import { openCompleteMenu } from "./complete-menu";
 import { renderObjectiveMeta, renderSprite, renderTypeTag, type Navigate } from "./parts";
 
-export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, clock: Clock): void {
+export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, clock: Clock, app: App): void {
   const s = store.state;
   const today = localDateOf(clock());
   const run = currentRun(s, today);
@@ -68,12 +69,12 @@ export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, cl
   if (rows.dated.length === 0 && rows.anytime.length === 0) {
     box.createDiv({ cls: "sq-muted", text: run.courses.size ? "Nothing open." : "Add objectives in Setup." });
   }
-  for (const r of rows.dated) renderRow(box, r, store, ended);
+  for (const r of rows.dated) renderRow(box, r, store, ended, app);
   if (rows.anytime.length) box.createDiv({ cls: "sq-divider", text: "anytime" });
-  for (const r of rows.anytime) renderRow(box, r, store, ended);
+  for (const r of rows.anytime) renderRow(box, r, store, ended, app);
 }
 
-function renderRow(box: HTMLElement, r: HomeRow, store: QuestStore, ended: boolean) {
+function renderRow(box: HTMLElement, r: HomeRow, store: QuestStore, ended: boolean, app: App) {
   const row = box.createDiv({ cls: "sq-obj-row" });
   if (r.overdue) row.addClass("is-overdue");
   if (r.soon) row.addClass("is-soon");
@@ -82,6 +83,6 @@ function renderRow(box: HTMLElement, r: HomeRow, store: QuestStore, ended: boole
   renderObjectiveMeta(row, r.obj, r.overdue);
   if (r.clickable && !ended) {
     row.addClass("is-clickable");
-    row.onClickEvent((evt) => openCompleteMenu(evt, r.obj, store));
+    row.onClickEvent((evt) => openCompleteMenu(evt, r.obj, store, app));
   }
 }
