@@ -20,13 +20,17 @@
   font-family: var(--sq-font);
   color: var(--sq-fg);
   background: var(--sq-bg);
-  padding: 16px 20px;
 }
 
-/* Sticky: stays at the top of the view while the content scrolls under it. The negative
-   margins stretch its background across the view's padding so nothing shows through. */
+/* Obsidian pads every view; StudyQuest's tab bar must touch the top edge to stay sticky
+   without a gap, so the view itself gets no padding and the bar and body carry it. */
+.workspace-leaf-content[data-type="studyquest-view"] .view-content.studyquest { padding: 0; overflow-x: hidden; }
+.studyquest .sq-body { padding: 0 20px 32px; }
+.studyquest > .sq-prestige { padding: 16px 20px 32px; }
+
+/* Sticky: stays at the top of the view while the content scrolls under it. */
 .studyquest .sq-tabs {
-  display: flex; gap: 4px; border-bottom: 1px solid var(--sq-line); margin: -16px -20px 18px; padding: 12px 20px 0;
+  display: flex; gap: 4px; border-bottom: 1px solid var(--sq-line); margin: 0 0 18px; padding: 12px 20px 0;
   position: sticky; top: 0; z-index: 2; background: var(--sq-bg);
 }
 .studyquest .sq-tab { padding: 6px 14px; font-size: 12px; color: var(--sq-muted); cursor: pointer; border: 1px solid transparent; border-bottom: none; border-radius: 4px 4px 0 0; }
