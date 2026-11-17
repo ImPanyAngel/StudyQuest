@@ -3,7 +3,11 @@ import type { LocalDate } from "./dates";
 export type Kind = "lecture" | "assignment" | "lab" | "reading" | "progress" | "exam";
 export const KINDS: Kind[] = ["lecture", "assignment", "lab", "reading", "progress", "exam"];
 export const DATED_KINDS: Kind[] = ["assignment", "exam"];
-export const BULK_KINDS: Kind[] = ["lecture", "lab", "reading"];
+export const BULK_KINDS: Kind[] = ["lecture", "lab"];
+/** Kinds whose silver needs an evidence file. */
+export const EVIDENCE_KINDS: Kind[] = ["lecture", "assignment", "lab"];
+/** Kinds Setup offers. Progress is retired; old ones still replay. */
+export const ADDABLE_KINDS: Kind[] = ["lecture", "assignment", "lab", "reading", "exam"];
 export const KIND_NAMES: Record<Kind, string> = {
   lecture: "Lecture",
   assignment: "Assignment",
@@ -61,6 +65,8 @@ export interface ObjectiveAdded extends Base {
   source: "manual";
   date?: LocalDate;
   steps?: string[];
+  /** Readings only: one or two level names, outermost first. */
+  levels?: string[];
 }
 
 export interface ObjectiveUndone extends Base {
@@ -78,6 +84,20 @@ export interface ObjectiveCompleted extends Base {
   type: "objective_completed";
   obj: string;
   tier: Tier;
+  /** Vault path of the file that proves it (lecture, assignment, lab silvers). */
+  evidence?: string;
+}
+
+export interface ReadingBumped extends Base {
+  type: "reading_bumped";
+  obj: string;
+  /** Index into the reading's levels. */
+  level: number;
+}
+
+export interface ReadingBumpUndone extends Base {
+  type: "reading_bump_undone";
+  obj: string;
 }
 
 export interface QuarterClosed extends Base {
@@ -103,7 +123,9 @@ export type QuestEvent =
   | StepCompleted
   | ObjectiveCompleted
   | QuarterClosed
-  | PrestigeSeen;
+  | PrestigeSeen
+  | ReadingBumped
+  | ReadingBumpUndone;
 
 export const EVENT_TYPES: QuestEvent["type"][] = [
   "quarter_created",
@@ -116,6 +138,8 @@ export const EVENT_TYPES: QuestEvent["type"][] = [
   "objective_completed",
   "quarter_closed",
   "prestige_seen",
+  "reading_bumped",
+  "reading_bump_undone",
 ];
 
 /** The run an event belongs to. Objective ids carry their run before the `/`. */

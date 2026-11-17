@@ -47,3 +47,20 @@ test("parseLog reads quarter_closed and prestige_seen, and checks their field ty
   ].join("\n");
   expect(parseLog(text).map((e) => e.id)).toEqual(["e_1", "e_2"]);
 });
+
+test("parseLog reads levels, evidence and reading events, and checks their field types", () => {
+  const t = "2026-11-18T09:00:00.000Z";
+  const add = { t, type: "objective_added", obj: "R/C-RDG01", run: "R", course: "C", kind: "reading", title: "B", source: "manual" };
+  const lines = [
+    { id: "ok1", ...add, levels: ["Course", "Chapter"] },
+    { id: "ok2", t, type: "objective_completed", obj: "R/C-LEC01", tier: "silver", evidence: "A/B.md" },
+    { id: "ok3", t, type: "reading_bumped", obj: "R/C-RDG01", level: 1 },
+    { id: "ok4", t, type: "reading_bump_undone", obj: "R/C-RDG01" },
+    { id: "bad1", ...add, levels: "Chapter" },
+    { id: "bad2", ...add, levels: [1] },
+    { id: "bad3", t, type: "objective_completed", obj: "R/C-LEC01", tier: "silver", evidence: 3 },
+    { id: "bad4", t, type: "reading_bumped", obj: "R/C-RDG01", level: "1" },
+    { id: "bad5", t, type: "reading_bump_undone" },
+  ].map((l) => JSON.stringify(l));
+  expect(parseLog(lines.join("\n")).map((e) => e.id)).toEqual(["ok1", "ok2", "ok3", "ok4"]);
+});

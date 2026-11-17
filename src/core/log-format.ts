@@ -16,6 +16,8 @@ const REQUIRED: Record<QuestEvent["type"], Record<string, FieldType>> = {
   objective_completed: { obj: S, tier: S },
   quarter_closed: { run: S, done: N, total: N, tier: N },
   prestige_seen: { run: S },
+  reading_bumped: { obj: S, level: N },
+  reading_bump_undone: { obj: S },
 };
 
 function wellFormed(e: Record<string, unknown>, type: QuestEvent["type"]): boolean {
@@ -23,9 +25,15 @@ function wellFormed(e: Record<string, unknown>, type: QuestEvent["type"]): boole
   for (const [key, want] of Object.entries(REQUIRED[type])) if (typeof e[key] !== want) return false;
   if (type === "objective_added") {
     if (e.date !== undefined && typeof e.date !== "string") return false;
-    if (e.steps !== undefined && (!Array.isArray(e.steps) || e.steps.some((x) => typeof x !== "string"))) return false;
+    if (e.steps !== undefined && !isStringArray(e.steps)) return false;
+    if (e.levels !== undefined && !isStringArray(e.levels)) return false;
   }
+  if (type === "objective_completed" && e.evidence !== undefined && typeof e.evidence !== "string") return false;
   return true;
+}
+
+function isStringArray(v: unknown): boolean {
+  return Array.isArray(v) && v.every((x) => typeof x === "string");
 }
 
 /** One JSON object per line. Anything that isn't a known, well-formed event is skipped. */

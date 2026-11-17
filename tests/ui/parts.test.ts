@@ -9,6 +9,9 @@ const obj = (completed?: ObjectiveState["completed"]): ObjectiveState => ({
   title: "Lecture 1",
   source: "manual",
   stepsDone: [],
+  position: [],
+  bumps: [],
+  bumped: false,
   addedAt: "2026-11-16T10:00:00.000Z",
   ...(completed ? { completed } : {}),
 });

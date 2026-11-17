@@ -8,6 +8,8 @@ import type {
   ObjectiveUndone,
   PrestigeSeen,
   QuarterClosed,
+  ReadingBumpUndone,
+  ReadingBumped,
   QuarterCreated,
   QuarterDatesCorrected,
   StepCompleted,
@@ -43,7 +45,7 @@ export const ev = {
     kind: Kind,
     n: number,
     t = at(2),
-    extra: { date?: LocalDate; steps?: string[]; title?: string } = {},
+    extra: { date?: LocalDate; steps?: string[]; title?: string; levels?: string[] } = {},
   ): ObjectiveAdded {
     const e: ObjectiveAdded = {
       id: id(),
@@ -58,6 +60,7 @@ export const ev = {
     };
     if (extra.date !== undefined) e.date = extra.date;
     if (extra.steps !== undefined) e.steps = extra.steps;
+    if (extra.levels !== undefined) e.levels = extra.levels;
     return e;
   },
   objectiveUndone(obj: string, t: string): ObjectiveUndone {
@@ -66,8 +69,16 @@ export const ev = {
   step(obj: string, step: number, t: string): StepCompleted {
     return { id: id(), t, type: "step_completed", obj, step };
   },
-  completed(obj: string, tier: "silver" | "sat", t: string): ObjectiveCompleted {
-    return { id: id(), t, type: "objective_completed", obj, tier };
+  completed(obj: string, tier: "silver" | "sat", t: string, evidence?: string): ObjectiveCompleted {
+    const e: ObjectiveCompleted = { id: id(), t, type: "objective_completed", obj, tier };
+    if (evidence !== undefined) e.evidence = evidence;
+    return e;
+  },
+  bump(obj: string, level: number, t: string): ReadingBumped {
+    return { id: id(), t, type: "reading_bumped", obj, level };
+  },
+  bumpUndone(obj: string, t: string): ReadingBumpUndone {
+    return { id: id(), t, type: "reading_bump_undone", obj };
   },
   closed(run: string, done: number, total: number, tier: number, t: string): QuarterClosed {
     return { id: id(), t, type: "quarter_closed", run, done, total, tier };

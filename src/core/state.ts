@@ -33,8 +33,16 @@ export interface ObjectiveState {
   date?: LocalDate;
   steps?: string[];
   stepsDone: boolean[];
+  /** Readings: level names (absent on readings from before phase 3). */
+  levels?: string[];
+  /** Readings: number per level; [] without levels. */
+  position: number[];
+  /** Readings: bumps not yet undone, newest last, with the position before each. */
+  bumps: { at: string; before: number[] }[];
+  /** True once ever bumped; ends the objective's and course's undo windows for good. */
+  bumped: boolean;
   addedAt: string;
-  completed?: { tier: Tier; at: string };
+  completed?: { tier: Tier; at: string; evidence?: string };
 }
 
 export interface State {
@@ -44,8 +52,10 @@ export interface State {
   objectives: Map<string, ObjectiveState>;
   /** Every objective id ever added, including undone ones. Never shrinks. */
   everObjectiveIds: Set<string>;
+  /** Evidence path → the objective whose completion owns it. */
+  evidenceOwners: Map<string, string>;
 }
 
 export function emptyState(): State {
-  return { runs: new Map(), objectives: new Map(), everObjectiveIds: new Set() };
+  return { runs: new Map(), objectives: new Map(), everObjectiveIds: new Set(), evidenceOwners: new Map() };
 }

@@ -210,6 +210,9 @@ function objectiveAdded(state: State, e: ObjectiveAdded): string | null {
     title: e.title,
     source: "manual",
     stepsDone: e.steps ? e.steps.map(() => false) : [],
+    position: [],
+    bumps: [],
+    bumped: false,
     addedAt: e.t,
   };
   if (e.date !== undefined) o.date = e.date;
