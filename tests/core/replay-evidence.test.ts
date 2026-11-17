@@ -1,3 +1,4 @@
+import { dropAfterClose } from "../../src/core/log-format";
 import { replay } from "../../src/core/replay";
 import { Q2, at, ev } from "./fixtures";
 
@@ -167,4 +168,19 @@ describe("reading levels and bumps", () => {
     const s = replay([old, oc, r, ev.closed("Old", 0, 1, 0, at(3)), ev.bump(r.obj, 0, at(4))]);
     expect(s.objectives.get(r.obj)!.position).toEqual([0]);
   });
+});
+
+test("undo after a reading is finished is rejected", () => {
+  const r = ev.objective(R, "C1", "reading", 1, at(2), { levels: ["Chapter"] });
+  const s = replay([...start(), r, ev.bump(r.obj, 0, at(3)), ev.completed(r.obj, "silver", at(4)), ev.bumpUndone(r.obj, at(5))]);
+  expect(s.objectives.get(r.obj)!.position).toEqual([1]);
+});
+
+test("a backdated bump below a run's close is dropped from its file", () => {
+  const old = ev.created("Old", "2026-10-01", "2026-10-15", at(0));
+  const oc = ev.course("Old", "C1", at(1));
+  const r = ev.objective("Old", "C1", "reading", 1, at(2), { levels: ["Chapter"] });
+  const close = ev.closed("Old", 0, 1, 0, at(5));
+  const bump = ev.bump(r.obj, 0, at(3)); // earlier than the close, but written below it
+  expect(dropAfterClose([old, oc, r, close, bump], new Set([close.id]))).toEqual([old, oc, r, close]);
 });

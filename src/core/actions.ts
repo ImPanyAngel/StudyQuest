@@ -156,11 +156,13 @@ function draftsFor(s: State, a: Action, now: Date): Result<Draft[]> {
       if (!o) return err("Unknown objective.");
       if (blocked(o.run)) return err(blocked(o.run)!);
       if (!EVIDENCE_KINDS.includes(o.kind)) return err("Only lectures, assignments and labs take an evidence file.");
-      const path = a.path.trim();
-      if (!path) return err("Pick a file.");
-      const owner = evidenceOwner(s, path);
-      if (owner) return err(`That file already proves ${owner.course} · ${owner.title}.`);
-      return ok([{ type: "objective_completed", obj: a.obj, tier: "silver", evidence: path }]);
+      // Stored exactly as Obsidian gives it: paths are compared character for character.
+      if (!a.path.trim()) return err("Pick a file.");
+      if (s.evidenceOwners.has(a.path)) {
+        const owner = evidenceOwner(s, a.path);
+        return err(owner ? `That file already proves ${owner.course} · ${owner.title}.` : "That file already proves another objective.");
+      }
+      return ok([{ type: "objective_completed", obj: a.obj, tier: "silver", evidence: a.path }]);
     }
     case "bumpReading":
     case "undoBump": {

@@ -40,6 +40,17 @@ export default class StudyQuestPlugin extends Plugin {
         this.registerEvent(ref);
       }
       this.register(() => window.clearTimeout(reload));
+
+      // Evidence links show whether their file still exists; redraw when files come and go.
+      let redraw: number | undefined;
+      const redrawSoon = () => {
+        window.clearTimeout(redraw);
+        redraw = window.setTimeout(() => this.refreshViews(), 250);
+      };
+      for (const name of ["create", "delete", "rename"] as const) {
+        this.registerEvent(this.app.vault.on(name as "create", redrawSoon));
+      }
+      this.register(() => window.clearTimeout(redraw));
       this.scheduleMidnightCheck();
       // Timers don't run while the Mac sleeps, so also check for a new day when the window comes back.
       this.registerDomEvent(window, "focus", () => this.dayTicker.check());
@@ -62,10 +73,14 @@ export default class StudyQuestPlugin extends Plugin {
   private async onNewDay() {
     await this.store.runDailyCheck();
     this.badge.update();
+    this.refreshViews();
+    await this.revealPrestige();
+  }
+
+  private refreshViews() {
     for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE)) {
       if (leaf.view instanceof StudyQuestView) leaf.view.refresh();
     }
-    await this.revealPrestige();
   }
 
   /** Opens StudyQuest when a closed run's Prestige Up screen hasn't been seen yet. */

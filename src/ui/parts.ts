@@ -1,4 +1,3 @@
-import type { App } from "obsidian";
 import { formatShort } from "../core/dates";
 import { KIND_NAMES, type Kind } from "../core/events";
 import type { ObjectiveState } from "../core/state";
@@ -45,25 +44,4 @@ export function renderMark(parent: HTMLElement, o: ObjectiveState, closed: boole
 
 export function stainLabel(n: number): string {
   return n === 0 ? "no stains" : n === 1 ? "1 stain" : `${n} stains`;
-}
-
-/**
- * The evidence file's name, opening the file when clicked. Opened through the
- * TFile itself, not a link, so names with #, ^ or [ open the file and not a heading.
- */
-export function renderEvidence(parent: HTMLElement, o: ObjectiveState, app: App): void {
-  const path = o.completed?.evidence;
-  if (!path) return;
-  const name = path.split("/").pop() ?? path;
-  const file = app.vault.getFileByPath(path);
-  if (!file) {
-    parent.createSpan({ cls: "sq-evidence is-missing", text: name, attr: { title: `${path} (no longer in the vault)` } });
-    return;
-  }
-  const link = parent.createEl("a", { cls: "sq-evidence", text: name, attr: { title: path, href: "#" } });
-  link.addEventListener("click", (evt) => {
-    evt.preventDefault();
-    evt.stopPropagation();
-    void app.workspace.getLeaf(false).openFile(file);
-  });
 }

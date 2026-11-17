@@ -77,3 +77,28 @@ test("bump, undo and their windows", () => {
   expect(canUndoObjective(undone.objectives.get(rd.obj)!, min(5))).toBe(false);
   expect(bumpDeadline(undone.objectives.get(rd.obj)!)).toBeNull();
 });
+
+test("the evidence path is stored exactly as Obsidian gives it", () => {
+  const l = ev.objective(R, "C1", "lecture", 1);
+  const r = plan([...start(), l], { type: "completeWithEvidence", obj: l.obj, path: " notes.md" });
+  expect(r.ok && r.value).toMatchObject([{ evidence: " notes.md" }]);
+});
+
+test("a claimed path is refused even if its owner can't be looked up", () => {
+  const a = ev.objective(R, "C1", "lecture", 1);
+  const b = ev.objective(R, "C1", "lecture", 2);
+  const s = replay([...start(), a, b, ev.completed(a.obj, "silver", at(3), "X.md")]);
+  s.objectives.delete(a.obj);
+  expect(planAction(s, { type: "completeWithEvidence", obj: b.obj, path: "X.md" }, min(10), ids)).toEqual({
+    ok: false,
+    error: "That file already proves another objective.",
+  });
+});
+
+test("finishing a reading is refused after the run has ended", () => {
+  const rd = ev.objective(R, "C1", "reading", 1, at(2), { levels: ["Chapter"] });
+  expect(plan([...start(), rd], { type: "selfCheck", obj: rd.obj }, new Date("2027-01-31T10:00:00.000Z"))).toEqual({
+    ok: false,
+    error: "This run has ended.",
+  });
+});

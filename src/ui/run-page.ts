@@ -3,7 +3,8 @@ import type { App } from "obsidian";
 import { courseObjectives, courseProgress, objectiveLabel, runScore, stains } from "../core/derive";
 import { tierLabel } from "../core/prestige";
 import type { QuestStore } from "../store/quest-store";
-import { renderEvidence, renderMark, renderObjectiveMeta, renderTypeTag, stainLabel, type Navigate, type Route } from "./parts";
+import { renderEvidence } from "./evidence-link";
+import { renderMark, renderObjectiveMeta, renderTypeTag, stainLabel, type Navigate, type Route } from "./parts";
 
 /** Every objective of one run, grouped by course. Read only. */
 export function renderRunPage(el: HTMLElement, store: QuestStore, route: Extract<Route, { tab: "run" }>, nav: Navigate, app: App): void {

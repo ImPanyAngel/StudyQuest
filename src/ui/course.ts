@@ -3,7 +3,8 @@ import { localDateOf, type Clock } from "../core/dates";
 import { courseObjectives, courseProgress, isResit, objectiveLabel, runEnded } from "../core/derive";
 import type { QuestStore } from "../store/quest-store";
 import { openCompleteMenu } from "./complete-menu";
-import { renderEvidence, renderMark, renderObjectiveMeta, renderTypeTag, type Navigate, type Route } from "./parts";
+import { renderEvidence } from "./evidence-link";
+import { renderMark, renderObjectiveMeta, renderTypeTag, type Navigate, type Route } from "./parts";
 
 export function renderCourse(
   el: HTMLElement,

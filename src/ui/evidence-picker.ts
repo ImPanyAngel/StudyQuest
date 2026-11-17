@@ -5,6 +5,8 @@ import type { QuestStore } from "../store/quest-store";
 
 /** Searchable list of vault files; picking one completes the objective as silver with that file as evidence. */
 export class EvidencePicker extends FuzzySuggestModal<TFile> {
+  private files: TFile[] | null = null;
+
   constructor(
     app: App,
     private store: QuestStore,
@@ -14,12 +16,14 @@ export class EvidencePicker extends FuzzySuggestModal<TFile> {
     this.setPlaceholder(`Pick the file that proves "${obj.title}"`);
   }
 
+  /** Called on every keystroke, so the sorted list is built once per opening. */
   getItems(): TFile[] {
     // The plugin's own log folder is never evidence. Recently changed files first.
-    return this.app.vault
+    this.files ??= this.app.vault
       .getFiles()
       .filter((f) => !f.path.startsWith("StudyQuest/"))
       .sort((a, b) => b.stat.mtime - a.stat.mtime);
+    return this.files;
   }
 
   getItemText(f: TFile): string {
@@ -46,6 +50,11 @@ export class EvidencePicker extends FuzzySuggestModal<TFile> {
   }
 
   onChooseItem(f: TFile): void {
+    // The list was built when the picker opened; the file may have gone since.
+    if (!this.app.vault.getFileByPath(f.path)) {
+      new Notice(`"${f.path}" is no longer in the vault.`);
+      return;
+    }
     void this.store.dispatch({ type: "completeWithEvidence", obj: this.obj.id, path: f.path }).then((r) => {
       if (!r.ok) new Notice(r.error);
     });

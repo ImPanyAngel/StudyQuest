@@ -17,7 +17,8 @@ import { tierLabel } from "../core/prestige";
 import { ADDABLE_KINDS, BULK_KINDS, DATED_KINDS, type Kind } from "../core/events";
 import { runIdFromName } from "../core/ids";
 import type { QuestStore } from "../store/quest-store";
-import { KIND_LABELS, renderEvidence, renderMark, renderObjectiveMeta, renderTypeTag } from "./parts";
+import { renderEvidence } from "./evidence-link";
+import { KIND_LABELS, renderMark, renderObjectiveMeta, renderTypeTag } from "./parts";
 import { singleFlight } from "./single-flight";
 
 /** Setup's own UI state, kept on the view so re-renders don't lose typed input. */
@@ -205,7 +206,8 @@ export function renderSetup(el: HTMLElement, store: QuestStore, clock: Clock, ui
   if (kind === "exam") s3.createDiv({ cls: "sq-hint", text: `Exam dates must fall in exam week (${formatShort(week.from)} → ${formatShort(week.to)}). Exams complete themselves as SAT once the date passes.` });
 
   // Bulk add
-  const bulkKind = (ui.drafts["bulk.kind"] as Kind) ?? "lecture";
+  const bulkDraft = ui.drafts["bulk.kind"] as Kind | undefined;
+  const bulkKind: Kind = bulkDraft && BULK_KINDS.includes(bulkDraft) ? bulkDraft : "lecture";
   const bulk = s3.createDiv({ cls: "sq-form" });
   bulk.createSpan({ cls: "sq-hint", text: "Bulk add" });
   kindSelect(bulk, BULK_KINDS, bulkKind, (k) => (ui.drafts["bulk.kind"] = k));
@@ -218,7 +220,7 @@ export function renderSetup(el: HTMLElement, store: QuestStore, clock: Clock, ui
         type: "bulkAddObjectives",
         run: run.id,
         course,
-        kind: (ui.drafts["bulk.kind"] as Kind) ?? "lecture",
+        kind: bulkKind,
         prefix: ui.drafts["bulk.prefix"] ?? "",
         from: Number(ui.drafts["bulk.from"] ?? 1),
         to: Number(ui.drafts["bulk.to"] ?? 0),
