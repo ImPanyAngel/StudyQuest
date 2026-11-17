@@ -184,3 +184,32 @@ test("an invalid close line doesn't hide later work or bring Prestige Up back", 
   expect(unseenPrestige(again.state)).toEqual([]);
   expect(log.count("quarter_closed")).toBe(2); // the bad one plus one real close
 });
+
+test("one daily check closing two runs appends once to each run's file, sats before close", async () => {
+  const log = new FakeLog();
+  now = new Date("2026-11-16T10:00:00.000Z");
+  const store = new QuestStore(log, clock);
+  await store.load();
+  for (const [name, start, end] of [["A", "2026-09-01", "2026-09-30"], ["B", "2026-10-01", "2026-10-31"]]) {
+    await store.dispatch({ type: "createRun", name, start, end });
+  }
+  // Hand-written lines: each run gets an exam on its last day (both runs have already ended).
+  for (const [run, date] of [["A", "2026-09-30"], ["B", "2026-10-31"]]) {
+    const course = JSON.stringify({ id: `e_${run}0000000000000000000000001`, t: "2026-11-16T10:05:00.000Z", type: "course_added", run, course: "C1", name: "C", folder: "C1/" });
+    const exam = JSON.stringify({ id: `e_${run}0000000000000000000000002`, t: "2026-11-16T10:06:00.000Z", type: "objective_added", obj: `${run}/C1-EXM01`, run, course: "C1", kind: "exam", title: "Final", source: "manual", date });
+    log.files.set(run, log.files.get(run)! + course + "\n" + exam + "\n");
+  }
+  await store.load();
+  let appends = 0;
+  const append = log.append.bind(log);
+  log.append = async (r, lines) => {
+    appends++;
+    return append(r, lines);
+  };
+  expect(await store.runDailyCheck()).toBe(4);
+  expect(appends).toBe(2);
+  for (const run of ["A", "B"]) {
+    const types = log.files.get(run)!.trim().split("\n").slice(-2).map((l) => JSON.parse(l).type);
+    expect(types).toEqual(["objective_completed", "quarter_closed"]);
+  }
+});

@@ -105,7 +105,9 @@ export function canCorrectRun(run: RunState, now: Date): boolean {
 }
 
 export function examsDueForSat(s: State, today: LocalDate): ObjectiveState[] {
-  return [...s.objectives.values()].filter((o) => o.kind === "exam" && !o.completed && !!o.date && o.date < today);
+  return [...s.objectives.values()].filter(
+    (o) => o.kind === "exam" && !o.completed && !!o.date && o.date < today && !s.runs.get(o.run)?.closed,
+  );
 }
 
 // ── prestige ────────────────────────────────────────────────────────────

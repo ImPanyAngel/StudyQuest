@@ -31,9 +31,17 @@ export function renderSprite(parent: HTMLElement): void {
   for (const part of ["head", "body", "leg-l", "leg-r"]) sprite.createDiv({ cls: `sq-sprite-${part}` });
 }
 
-/** SILVER / SAT (GOLD later) when complete; otherwise STAIN on a closed run, open on a running one. */
+/** SILVER / SAT (GOLD later) when complete; otherwise STAIN on a closed run, OPEN on a running one. */
+export function markOf(o: ObjectiveState, closed: boolean): { kind: string; text: string } {
+  const kind = o.completed?.tier ?? (closed ? "stain" : "open");
+  return { kind, text: kind.toUpperCase() };
+}
+
 export function renderMark(parent: HTMLElement, o: ObjectiveState, closed: boolean): void {
-  const tier = o.completed?.tier;
-  const kind = tier ?? (closed ? "stain" : "open");
-  parent.createSpan({ cls: `sq-mark is-${kind}`, text: kind === "open" ? "open" : kind.toUpperCase() });
+  const m = markOf(o, closed);
+  parent.createSpan({ cls: `sq-mark is-${m.kind}`, text: m.text });
+}
+
+export function stainLabel(n: number): string {
+  return n === 0 ? "no stains" : n === 1 ? "1 stain" : `${n} stains`;
 }

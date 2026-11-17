@@ -2,7 +2,7 @@ import { formatShort } from "../core/dates";
 import { courseObjectives, courseProgress, runScore, stains } from "../core/derive";
 import { tierLabel } from "../core/prestige";
 import type { QuestStore } from "../store/quest-store";
-import { renderMark, renderObjectiveMeta, renderTypeTag, type Navigate, type Route } from "./parts";
+import { renderMark, renderObjectiveMeta, renderTypeTag, stainLabel, type Navigate, type Route } from "./parts";
 
 /** Every objective of one run, grouped by course. Read only. */
 export function renderRunPage(el: HTMLElement, store: QuestStore, route: Extract<Route, { tab: "run" }>, nav: Navigate): void {
@@ -20,10 +20,7 @@ export function renderRunPage(el: HTMLElement, store: QuestStore, route: Extract
   if (closed) title.push(tierLabel(score.tier ?? 0));
   head.createDiv({ cls: "sq-run-title", text: title.join(" · ") });
   const sub = [`${formatShort(run.start)} → ${formatShort(run.end)}`, `${score.done} of ${score.total}`];
-  if (closed) {
-    const n = stains(s, run.id).length;
-    sub.push(n === 1 ? "1 stain" : `${n} stains`);
-  }
+  if (closed) sub.push(stainLabel(stains(s, run.id).length));
   head.createDiv({ cls: "sq-hint", text: sub.join(" · ") });
 
   if (run.courses.size === 0) el.createDiv({ cls: "sq-muted", text: "No courses." });

@@ -158,3 +158,10 @@ test("examsDueForSat uses strict date < today", () => {
   const sat = replay([ev.created(), ev.course(R, "C1"), ex, ev.completed(ex.obj, "sat", "2027-01-28T10:00:00.000Z")]);
   expect(examsDueForSat(sat, "2027-01-29")).toEqual([]);
 });
+
+test("examsDueForSat skips closed runs", () => {
+  const ex = ev.objective(Q2.run, "C1", "exam", 1, at(2), { date: "2027-01-27" });
+  const s = replay([ev.created(), ev.course(Q2.run, "C1"), ex, ev.closed(Q2.run, 0, 1, 0, "2027-01-31T08:00:00.000Z")]);
+  expect(s.runs.get(Q2.run)!.closed).toBeDefined();
+  expect(examsDueForSat(s, "2027-02-01")).toEqual([]);
+});

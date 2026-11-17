@@ -3,7 +3,7 @@ import { hallRuns, runScore, stains } from "../core/derive";
 import { tierLabel } from "../core/prestige";
 import type { RunState } from "../core/state";
 import type { QuestStore } from "../store/quest-store";
-import type { Navigate } from "./parts";
+import { stainLabel, type Navigate } from "./parts";
 
 /** Library of runs: unfinished ones first as dashed cards, then closed runs newest first. */
 export function renderHall(el: HTMLElement, store: QuestStore, nav: Navigate, clock: Clock): void {
@@ -27,7 +27,7 @@ export function renderHall(el: HTMLElement, store: QuestStore, nav: Navigate, cl
     } else {
       meta.createSpan({ cls: "sq-card-tier", text: tierLabel(score.tier ?? 0) });
       const n = stains(s, r.id).length;
-      c.createDiv({ cls: n ? "sq-card-stains" : "sq-card-stains is-none", text: n === 0 ? "no stains" : n === 1 ? "1 stain" : `${n} stains` });
+      c.createDiv({ cls: n ? "sq-card-stains" : "sq-card-stains is-none", text: stainLabel(n) });
     }
     c.onClickEvent(() => nav({ tab: "run", run: r.id }));
   };

@@ -3,6 +3,7 @@ import type { Score } from "../core/derive";
 import { tierLabel } from "../core/prestige";
 import type { RunState } from "../core/state";
 import { renderSprite } from "./parts";
+import { armedAfter } from "./click-guard";
 import { singleFlight } from "./single-flight";
 
 /** Full-view takeover shown once per closed run (layout B: character beside the score). */
@@ -29,7 +30,12 @@ export function renderPrestigeUp(el: HTMLElement, run: RunState, score: Score, o
       next.disabled = false;
     }
   });
-  next.onClickEvent(() => void go());
-  const wardrobe = buttons.createEl("button", { text: "Customise character", attr: { title: "Arrives in phase 6" } });
+  // With several unseen runs, the next screen's button appears under the cursor; ignore a double click's second half.
+  const armed = armedAfter(400);
+  next.onClickEvent(() => {
+    if (armed()) void go();
+  });
+  const wardrobe = buttons.createEl("button", { text: "Customise character" });
   wardrobe.disabled = true;
+  box.createDiv({ cls: "sq-hint", text: "Character customisation arrives in phase 6." });
 }
