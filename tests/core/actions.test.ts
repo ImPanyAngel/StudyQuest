@@ -66,12 +66,13 @@ test("adds and self checks refused after run end", () => {
   const after = new Date("2027-01-31T10:00:00.000Z");
   expect(run(h, { type: "addCourse", run: R, code: "C2", name: "n", folder: "f" }, after).error).toEqual(expect.any(String));
   expect(run(h, { type: "addObjective", run: R, course: "C1", kind: "lecture", title: "x" }, after).error).toEqual(expect.any(String));
-  expect(run(h, { type: "selfCheck", obj: l.obj }, after).error).toEqual(expect.any(String));
-  expect(run(h, { type: "selfCheck", obj: l.obj }, new Date("2027-01-30T20:00:00.000Z")).error).toBeUndefined();
+  const done = { type: "completeWithEvidence" as const, obj: l.obj, path: "C1/L1.md" };
+  expect(run(h, done, after).error).toEqual(expect.any(String));
+  expect(run(h, done, new Date("2027-01-30T20:00:00.000Z")).error).toBeUndefined();
 });
 
-test("self check on a lecture writes silver", () => {
-  const l = ev.objective(R, "C1", "lecture", 1, at(2));
+test("self check on a reading writes silver", () => {
+  const l = ev.objective(R, "C1", "reading", 1, at(2), { levels: ["Chapter"] });
   const r = run([...base(), l], { type: "selfCheck", obj: l.obj }, min(40));
   expect(r.events).toMatchObject([{ type: "objective_completed", obj: l.obj, tier: "silver" }]);
 });

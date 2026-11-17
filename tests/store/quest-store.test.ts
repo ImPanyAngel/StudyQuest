@@ -73,11 +73,14 @@ test("subscribers are notified after a change", async () => {
   expect(calls).toBe(1);
 });
 
-test("two concurrent selfChecks write exactly one completion", async () => {
+test("two concurrent completions of one objective write exactly one", async () => {
   const { log, store } = await setup();
   await store.dispatch({ type: "addObjective", run: Q2.run, course: "C1", kind: "lecture", title: "L1" });
   const obj = `${Q2.run}/C1-LEC01`;
-  const [a, b] = await Promise.all([store.dispatch({ type: "selfCheck", obj }), store.dispatch({ type: "selfCheck", obj })]);
+  const [a, b] = await Promise.all([
+    store.dispatch({ type: "completeWithEvidence", obj, path: "C1/A.md" }),
+    store.dispatch({ type: "completeWithEvidence", obj, path: "C1/B.md" }),
+  ]);
   expect([a.ok, b.ok].sort()).toEqual([false, true]);
   expect(log.count("objective_completed")).toBe(1);
 });
@@ -121,7 +124,7 @@ async function endedQ2() {
   const { log, store } = await setup();
   await store.dispatch({ type: "bulkAddObjectives", run: Q2.run, course: "C1", kind: "lecture", prefix: "Lecture", from: 1, to: 2 });
   await store.dispatch({ type: "addObjective", run: Q2.run, course: "C1", kind: "exam", title: "Final", date: "2027-01-30" });
-  await store.dispatch({ type: "selfCheck", obj: `${Q2.run}/C1-LEC01` });
+  await store.dispatch({ type: "completeWithEvidence", obj: `${Q2.run}/C1-LEC01`, path: "C1/Lecture 1.md" });
   now = new Date("2027-01-31T08:00:00.000Z");
   return { log, store };
 }
@@ -212,4 +215,13 @@ test("one daily check closing two runs appends once to each run's file, sats bef
     const types = log.files.get(run)!.trim().split("\n").slice(-2).map((l) => JSON.parse(l).type);
     expect(types).toEqual(["objective_completed", "quarter_closed"]);
   }
+});
+
+test("two concurrent completions with the same file: one wins, one is refused", async () => {
+  const { log, store } = await setup();
+  await store.dispatch({ type: "bulkAddObjectives", run: Q2.run, course: "C1", kind: "lecture", prefix: "Lecture", from: 1, to: 2 });
+  const pick = (n: number) => store.dispatch({ type: "completeWithEvidence", obj: `${Q2.run}/C1-LEC0${n}`, path: "C1/Notes.md" });
+  const [a, b] = await Promise.all([pick(1), pick(2)]);
+  expect([a.ok, b.ok].sort()).toEqual([false, true]);
+  expect(log.files.get(Q2.run)!.split("\n").filter((l) => l.includes('"evidence":"C1/Notes.md"'))).toHaveLength(1);
 });

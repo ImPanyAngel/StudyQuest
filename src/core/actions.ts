@@ -1,6 +1,6 @@
 import { localDateOf, type LocalDate } from "./dates";
-import { examsDueForSat, runEnded, runProgress, runsDueToClose } from "./derive";
-import { BULK_KINDS, KIND_NAMES, type IdFactory, type Kind, type QuestEvent } from "./events";
+import { evidenceOwner, examsDueForSat, runEnded, runProgress, runsDueToClose } from "./derive";
+import { BULK_KINDS, EVIDENCE_KINDS, KIND_NAMES, type IdFactory, type Kind, type QuestEvent } from "./events";
 import { TYPE_CODES, objectiveId, runIdFromName } from "./ids";
 import { tierFor } from "./prestige";
 import { applyEvent } from "./replay";
@@ -12,12 +12,15 @@ export type Action =
   | { type: "correctRunDates"; run: string; start: LocalDate; end: LocalDate }
   | { type: "addCourse"; run: string; code: string; name: string; folder: string }
   | { type: "undoCourse"; run: string; code: string }
-  | { type: "addObjective"; run: string; course: string; kind: Kind; title: string; date?: LocalDate; steps?: string[] }
+  | { type: "addObjective"; run: string; course: string; kind: Kind; title: string; date?: LocalDate; steps?: string[]; levels?: string[] }
   | { type: "bulkAddObjectives"; run: string; course: string; kind: Kind; prefix: string; from: number; to: number }
   | { type: "undoObjective"; obj: string }
   | { type: "selfCheck"; obj: string }
   | { type: "checkStep"; obj: string; step: number }
-  | { type: "acknowledgePrestige"; run: string };
+  | { type: "acknowledgePrestige"; run: string }
+  | { type: "completeWithEvidence"; obj: string; path: string }
+  | { type: "bumpReading"; obj: string; level: number }
+  | { type: "undoBump"; obj: string };
 
 const MAX_BULK = 50;
 
@@ -94,6 +97,12 @@ function draftsFor(s: State, a: Action, now: Date): Result<Draft[]> {
       return ok([{ type: "course_undone", run: a.run, course: a.code }]);
     case "addObjective": {
       if (blocked(a.run)) return err(blocked(a.run)!);
+      if (a.kind === "progress") return err("Progress objectives are no longer available.");
+      let levels: string[] | undefined;
+      if (a.kind === "reading") {
+        levels = (a.levels ?? []).map((l) => l.trim()).filter(Boolean);
+        if (levels.length < 1 || levels.length > 2) return err('A reading needs one or two levels, like "Chapter" or "Course, Chapter".');
+      }
       const d: Draft = {
         type: "objective_added",
         obj: objectiveId(a.run, a.course, a.kind, nextNumber(s, a.run, a.course, a.kind)),
@@ -105,11 +114,12 @@ function draftsFor(s: State, a: Action, now: Date): Result<Draft[]> {
       };
       if (a.date !== undefined) d.date = a.date;
       if (a.steps !== undefined) d.steps = a.steps.map((x) => x.trim());
+      if (levels) d.levels = levels;
       return ok([d]);
     }
     case "bulkAddObjectives": {
       if (blocked(a.run)) return err(blocked(a.run)!);
-      if (!BULK_KINDS.includes(a.kind)) return err("Bulk add works for lectures, labs and readings.");
+      if (!BULK_KINDS.includes(a.kind)) return err("Bulk add works for lectures and labs.");
       if (!Number.isInteger(a.from) || !Number.isInteger(a.to) || a.from < 1 || a.from > a.to) {
         return err("Pick a range like 1 to 14.");
       }
@@ -138,7 +148,26 @@ function draftsFor(s: State, a: Action, now: Date): Result<Draft[]> {
       if (blocked(o.run)) return err(blocked(o.run)!);
       if (o.kind === "exam") return err("Exams complete automatically once their date passes.");
       if (o.kind === "progress") return err("Check the steps one by one.");
+      if (EVIDENCE_KINDS.includes(o.kind)) return err("Pick the file that proves it.");
       return ok([{ type: "objective_completed", obj: a.obj, tier: "silver" }]);
+    }
+    case "completeWithEvidence": {
+      const o = s.objectives.get(a.obj);
+      if (!o) return err("Unknown objective.");
+      if (blocked(o.run)) return err(blocked(o.run)!);
+      if (!EVIDENCE_KINDS.includes(o.kind)) return err("Only lectures, assignments and labs take an evidence file.");
+      const path = a.path.trim();
+      if (!path) return err("Pick a file.");
+      const owner = evidenceOwner(s, path);
+      if (owner) return err(`That file already proves ${owner.course} · ${owner.title}.`);
+      return ok([{ type: "objective_completed", obj: a.obj, tier: "silver", evidence: path }]);
+    }
+    case "bumpReading":
+    case "undoBump": {
+      const o = s.objectives.get(a.obj);
+      if (!o) return err("Unknown objective.");
+      if (blocked(o.run)) return err(blocked(o.run)!);
+      return ok([a.type === "bumpReading" ? { type: "reading_bumped", obj: a.obj, level: a.level } : { type: "reading_bump_undone", obj: a.obj }]);
     }
     case "acknowledgePrestige":
       return ok([{ type: "prestige_seen", run: a.run }]);

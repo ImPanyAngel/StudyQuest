@@ -91,13 +91,40 @@ export function undoDeadline(addedAt: string): Date {
 }
 
 export function canUndoObjective(o: ObjectiveState, now: Date): boolean {
-  return !o.completed && !o.stepsDone.some(Boolean) && withinUndoWindow(o.addedAt, now.toISOString());
+  return !touched(o) && withinUndoWindow(o.addedAt, now.toISOString());
+}
+
+/** Completed, a step checked, or ever bumped: undo windows are over. Mirrors replay's rule. */
+function touched(o: ObjectiveState): boolean {
+  return !!o.completed || o.stepsDone.some(Boolean) || o.bumped;
+}
+
+/** Title, plus the reading's position, e.g. "Boot.dev [Course: 1; Chapter: 4]". */
+export function objectiveLabel(o: ObjectiveState): string {
+  if (!o.levels) return o.title;
+  return `${o.title} [${o.levels.map((l, i) => `${l}: ${o.position[i]}`).join("; ")}]`;
+}
+
+/** When the most recent live bump stops being undoable, or null if there is none. */
+export function bumpDeadline(o: ObjectiveState): Date | null {
+  const last = o.bumps[o.bumps.length - 1];
+  return last ? undoDeadline(last.at) : null;
+}
+
+export function canUndoBump(o: ObjectiveState, now: Date): boolean {
+  const last = o.bumps[o.bumps.length - 1];
+  return !o.completed && !!last && withinUndoWindow(last.at, now.toISOString());
+}
+
+export function evidenceOwner(s: State, path: string): ObjectiveState | undefined {
+  const id = s.evidenceOwners.get(path);
+  return id ? s.objectives.get(id) : undefined;
 }
 
 export function canUndoCourse(s: State, run: string, code: string, now: Date): boolean {
   const c = s.runs.get(run)?.courses.get(code);
   if (!c || !withinUndoWindow(c.addedAt, now.toISOString())) return false;
-  return courseObjectives(s, run, code).every((o) => !o.completed && !o.stepsDone.some(Boolean));
+  return courseObjectives(s, run, code).every((o) => !touched(o));
 }
 
 export function canCorrectRun(run: RunState, now: Date): boolean {
