@@ -31,6 +31,14 @@ export function unlockedBadgeItems(s: State, run: string): Set<string> {
   return out;
 }
 
+const IN_RUN_BADGE_IDS = new Set([BADGE_ITEMS["lecture-sweep"], BADGE_ITEMS["course-complete"]]);
+
+/** Which worn items are drawn: everything except an in-run badge item whose badge has lapsed. */
+export function drawnFilter(s: State, run: string): (itemId: string) => boolean {
+  const unlocked = unlockedBadgeItems(s, run);
+  return (id) => !IN_RUN_BADGE_IDS.has(id) || unlocked.has(id);
+}
+
 /** Items this run's character may wear: starter items, purchases and unlocked badge items that fit the body. */
 export function wearable(s: State, run: string, body: Body): Set<string> {
   const ids = new Set<string>([...STARTER_IDS, ...(s.runs.get(run)?.purchases.keys() ?? []), ...unlockedBadgeItems(s, run)]);

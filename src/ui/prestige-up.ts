@@ -3,7 +3,7 @@ import type { Score } from "../core/derive";
 import type { Badge, RunRewards } from "../core/rewards";
 import { tierLabel } from "../core/prestige";
 import type { RunState } from "../core/state";
-import { renderSprite } from "./parts";
+import { renderCharacter, type Shown } from "./sprite";
 import { armedAfter } from "./click-guard";
 import { singleFlight } from "./single-flight";
 
@@ -14,6 +14,8 @@ export function renderPrestigeUp(
   score: Score,
   rewards: RunRewards,
   unlocked: Badge[],
+  character: Shown | null,
+  visible: (itemId: string) => boolean,
   onContinue: () => Promise<void>,
 ): void {
   const box = el.createDiv({ cls: "sq-prestige" });
@@ -21,7 +23,7 @@ export function renderPrestigeUp(
   box.createDiv({ cls: "sq-prestige-run", text: `${run.name} · complete` });
 
   const row = box.createDiv({ cls: "sq-prestige-row" });
-  renderSprite(row.createDiv({ cls: "sq-prestige-player" }));
+  renderCharacter(row.createDiv({ cls: "sq-prestige-player" }), character, visible, 2);
   const result = row.createDiv({ cls: "sq-prestige-result" });
   result.createDiv({ cls: "sq-prestige-pct", text: score.pct === null ? "—" : `${score.pct}%` });
   result.createDiv({ cls: "sq-prestige-tier", text: tierLabel(score.tier ?? 0) });
@@ -45,7 +47,4 @@ export function renderPrestigeUp(
   next.onClickEvent(() => {
     if (armed()) void go();
   });
-  const wardrobe = buttons.createEl("button", { text: "Customise character" });
-  wardrobe.disabled = true;
-  wardrobe.setAttr("title", "Customise character — coming with the character update");
 }

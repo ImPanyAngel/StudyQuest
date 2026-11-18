@@ -1,10 +1,12 @@
 import { formatShort, localDateOf, type Clock } from "../core/dates";
 import { hallRuns, runScore, stains } from "../core/derive";
 import { tierLabel } from "../core/prestige";
+import { drawnFilter } from "../core/character";
 import { runRewards } from "../core/rewards";
 import type { RunState } from "../core/state";
 import type { QuestStore } from "../store/quest-store";
 import { stainLabel, type Navigate } from "./parts";
+import { renderCharacter } from "./sprite";
 
 /** Library of runs: unfinished ones first as dashed cards, then closed runs newest first. */
 export function renderHall(el: HTMLElement, store: QuestStore, nav: Navigate, clock: Clock): void {
@@ -18,7 +20,9 @@ export function renderHall(el: HTMLElement, store: QuestStore, nav: Navigate, cl
   const grid = el.createDiv({ cls: "sq-hall" });
   const card = (r: RunState, live: boolean) => {
     const c = grid.createDiv({ cls: live ? "sq-card is-live" : "sq-card" });
-    c.createDiv({ cls: "sq-card-art", text: live ? "in progress" : "" });
+    const art = c.createDiv({ cls: "sq-card-art" });
+    if (r.character) renderCharacter(art, r.character, drawnFilter(s, r.id), 2);
+    else art.setText(live ? "in progress" : "");
     c.createDiv({ cls: "sq-card-name", text: r.name });
     const score = runScore(s, r.id);
     const meta = c.createDiv({ cls: "sq-card-meta" });

@@ -8,7 +8,9 @@ export type Route =
   | { tab: "setup" }
   | { tab: "course"; run: string; course: string }
   | { tab: "hall" }
-  | { tab: "run"; run: string };
+  | { tab: "run"; run: string }
+  | { tab: "creation"; run: string }
+  | { tab: "character"; run: string };
 export type Navigate = (r: Route) => void;
 
 export const KIND_LABELS: Record<Kind, string> = KIND_NAMES;

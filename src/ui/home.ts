@@ -18,7 +18,9 @@ import type { QuestStore } from "../store/quest-store";
 import type { RunChoice } from "../store/run-choice";
 import { openCompleteMenu } from "./complete-menu";
 import { renderBadges } from "./badges";
-import { renderLevel, renderObjectiveMeta, renderSprite, renderTypeTag, type Navigate } from "./parts";
+import { drawnFilter } from "../core/character";
+import { renderLevel, renderObjectiveMeta, renderTypeTag, type Navigate } from "./parts";
+import { renderCharacter } from "./sprite";
 
 export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, clock: Clock, app: App, choice: RunChoice): void {
   const s = store.state;
@@ -81,7 +83,10 @@ export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, cl
   renderBadges(middle, runBadges(s, run.id));
 
   const side = top.createDiv({ cls: "sq-player-col" });
-  renderSprite(side.createDiv({ cls: "sq-player" }));
+  // The card is the way to the character: creation first, then the character page.
+  const card = side.createDiv({ cls: "sq-player is-clickable" });
+  renderCharacter(card, run.character ?? null, drawnFilter(s, run.id), 2);
+  card.onClickEvent(() => nav(run.character ? { tab: "character", run: run.id } : { tab: "creation", run: run.id }));
   renderLevel(side, runRewards(s, run.id));
 
   // ── objectives ──

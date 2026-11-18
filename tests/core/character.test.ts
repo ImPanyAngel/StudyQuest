@@ -1,7 +1,7 @@
 import { createIdFactory, type QuestEvent } from "../../src/core/events";
 import { planAction, type Action } from "../../src/core/actions";
 import { BADGE_ITEMS } from "../../src/core/catalog";
-import { checkLook, defaultLook, unlockedBadgeItems, wearable } from "../../src/core/character";
+import { checkLook, defaultLook, drawnFilter, unlockedBadgeItems, wearable } from "../../src/core/character";
 import { replay } from "../../src/core/replay";
 import { runRewards } from "../../src/core/rewards";
 import { LOOK, Q2, T0, at, ev } from "./fixtures";
@@ -97,6 +97,16 @@ describe("badge items", () => {
     expect(plan(lapsed, { type: "changeLook", run: R, look: glasses("blue") }, 62)).toMatchObject({ ok: false });
     const bare = [...run(1), ev.objective(R, "C1", "lecture", 2, at(61))];
     expect(plan(bare, { type: "changeLook", run: R, look: glasses() }, 62)).toMatchObject({ ok: false });
+  });
+
+  test("a lapsed in-run badge item isn't drawn, and is again once the badge holds", () => {
+    const worn = apply(run(1), { type: "changeLook", run: R, look: glasses() });
+    expect(drawnFilter(replay(worn), R)(GLASSES)).toBe(true);
+    const lapsed = [...worn, ev.objective(R, "C1", "lecture", 2, at(61))];
+    expect(drawnFilter(replay(lapsed), R)(GLASSES)).toBe(false);
+    expect(drawnFilter(replay(lapsed), R)("torso/shirts/shortsleeve/torso_clothes_tshirt")).toBe(true);
+    const back = [...lapsed, ev.completed(`${R}/C1-LEC02`, "silver", at(62), "L2.md")];
+    expect(drawnFilter(replay(back), R)(GLASSES)).toBe(true);
   });
 
   test("a permanent badge item earned by one run is wearable in a later one", () => {

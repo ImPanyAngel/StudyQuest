@@ -2,10 +2,12 @@ import { formatShort } from "../core/dates";
 import type { App } from "obsidian";
 import { courseObjectives, courseProgress, objectiveLabel, runScore, stains } from "../core/derive";
 import { tierLabel } from "../core/prestige";
+import { drawnFilter } from "../core/character";
 import { badgesEarnedBy, runRewards } from "../core/rewards";
 import type { QuestStore } from "../store/quest-store";
 import { renderEvidence } from "./evidence-link";
 import { renderBadges } from "./badges";
+import { renderCharacter } from "./sprite";
 import { renderMark, renderObjectiveMeta, renderTypeTag, stainLabel, type Navigate, type Route } from "./parts";
 
 /** Every objective of one run, grouped by course. Read only. */
@@ -20,6 +22,7 @@ export function renderRunPage(el: HTMLElement, store: QuestStore, route: Extract
   const closed = !!run.closed;
   const score = runScore(s, run.id);
   const head = el.createDiv({ cls: "sq-run-head" });
+  if (run.character) renderCharacter(head.createDiv({ cls: "sq-run-character" }), run.character, drawnFilter(s, run.id), 1);
   const title = [run.name, score.pct === null ? "—" : `${score.pct}%`];
   if (closed) title.push(tierLabel(score.tier ?? 0));
   title.push(`Level ${runRewards(s, run.id).level.level}`);

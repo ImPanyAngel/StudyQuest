@@ -1,11 +1,14 @@
 import { ItemView, Notice, type WorkspaceLeaf } from "obsidian";
 import { localDateOf } from "../core/dates";
 import { chosenRun, openRuns, runScore, unseenPrestige } from "../core/derive";
+import { drawnFilter } from "../core/character";
 import { permanentBadges, runRewards } from "../core/rewards";
 import type { CourseFolders } from "../store/course-folders";
 import type { QuestStore } from "../store/quest-store";
 import type { RunChoice } from "../store/run-choice";
+import { renderCharacterPage } from "./character";
 import { renderCourse } from "./course";
+import { renderCreation, type CharacterUi } from "./creation";
 import { renderHall } from "./hall";
 import { renderHome } from "./home";
 import { renderPrestigeUp } from "./prestige-up";
@@ -19,6 +22,7 @@ export class StudyQuestView extends ItemView {
   private route: Route = { tab: "home" };
   private unsubscribe?: () => void;
   private setupUi: SetupUi = { drafts: {} };
+  private characterUi: CharacterUi = {};
 
   constructor(
     leaf: WorkspaceLeaf,
@@ -84,7 +88,8 @@ export class StudyQuestView extends ItemView {
     if (unseen) {
       const s = this.store.state;
       const unlocked = permanentBadges(s).filter((b) => b.run === unseen.id);
-      renderPrestigeUp(root, unseen, runScore(s, unseen.id), runRewards(s, unseen.id), unlocked, async () => {
+      const shown = unseen.character ?? null;
+      renderPrestigeUp(root, unseen, runScore(s, unseen.id), runRewards(s, unseen.id), unlocked, shown, drawnFilter(s, unseen.id), async () => {
         const r = await this.store.dispatch({ type: "acknowledgePrestige", run: unseen.id });
         if (!r.ok) new Notice(r.error);
         else if (unseenPrestige(this.store.state).length === 0) this.openSetupForNewRun();
@@ -99,7 +104,7 @@ export class StudyQuestView extends ItemView {
       t.onClickEvent(() => this.navigate(r));
     };
     const at = this.route.tab;
-    tab("Home", { tab: "home" }, at === "home" || at === "course");
+    tab("Home", { tab: "home" }, at === "home" || at === "course" || at === "creation" || at === "character");
     tab("Setup", { tab: "setup" }, at === "setup");
     tab("Hall", { tab: "hall" }, at === "hall" || at === "run");
     this.renderRunSwitch(tabs);
@@ -123,6 +128,12 @@ export class StudyQuestView extends ItemView {
       case "run":
         renderRunPage(body, this.store, this.route, nav, this.app);
         break;
+      case "creation":
+        renderCreation(body, this.store, this.route, nav, this.characterUi, () => this.refresh());
+        break;
+      case "character":
+        renderCharacterPage(body, this.store, this.route, nav, this.characterUi, () => this.refresh(), this.app);
+        break;
     }
   }
 
@@ -139,7 +150,7 @@ export class StudyQuestView extends ItemView {
       this.setupUi.run = pick.value;
       this.setupUi.course = undefined;
       // A course page belongs to the old run; go back to Home.
-      if (this.route.tab === "course") this.route = { tab: "home" };
+      if (this.route.tab === "course" || this.route.tab === "creation" || this.route.tab === "character") this.route = { tab: "home" };
       this.choice.set(pick.value);
       this.refresh();
     };

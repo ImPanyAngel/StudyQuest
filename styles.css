@@ -132,7 +132,7 @@
 .studyquest .sq-card { border: 1px solid var(--sq-line); padding: 10px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; }
 .studyquest .sq-card:hover { border-color: var(--sq-gold); }
 .studyquest .sq-card.is-live { border-style: dashed; }
-.studyquest .sq-card-art { height: 90px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--sq-faint); background: repeating-linear-gradient(45deg, var(--sq-track) 0 6px, transparent 6px 12px); }
+.studyquest .sq-card-art { height: 132px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--sq-faint); background: repeating-linear-gradient(45deg, var(--sq-track) 0 6px, transparent 6px 12px); }
 .studyquest .sq-card-name { font-size: 13px; }
 .studyquest .sq-card-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .studyquest .sq-card-pct { font-size: 18px; font-weight: 700; }
@@ -165,3 +165,41 @@
 .studyquest .sq-card-level { font-size: 11px; color: var(--sq-muted); }
 .studyquest .sq-prestige-level { font-size: 14px; letter-spacing: 1px; color: var(--sq-muted); }
 .studyquest .sq-prestige-unlocked { font-size: 13px; color: var(--sq-gold); }
+
+/* ── phase 5b: character ── */
+.studyquest canvas.sq-character { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+.studyquest .sq-player.is-clickable { cursor: pointer; }
+.studyquest .sq-player.is-clickable:hover { border-color: var(--sq-accent); }
+.studyquest .sq-card-art canvas.sq-character { margin: 0 auto; }
+.studyquest .sq-run-head { position: relative; }
+.studyquest .sq-run-character { float: right; }
+.studyquest .sq-page-title { margin: 6px 0 12px; font-size: 15px; font-weight: 600; }
+.studyquest .sq-char-page { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+.studyquest .sq-char-stage { width: 192px; flex: none; display: flex; flex-direction: column; gap: 6px; }
+.studyquest .sq-char-stage canvas.sq-character { border: 1px solid var(--sq-line); background: var(--sq-hover); }
+.studyquest .sq-credits-link { font-size: 11px; color: var(--sq-muted); cursor: pointer; }
+.studyquest .sq-char-form { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 8px; }
+.studyquest .sq-look-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.studyquest .sq-look-label { width: 80px; flex: none; font-size: 12px; color: var(--sq-muted); }
+.studyquest .sq-cycler { display: inline-flex; align-items: center; gap: 4px; }
+.studyquest .sq-cycler-name { min-width: 130px; text-align: center; font-size: 12px; }
+.studyquest .sq-step { padding: 0 8px; font-size: 13px; }
+.studyquest .sq-swatches { display: inline-flex; flex-wrap: wrap; gap: 3px; max-width: 320px; }
+.studyquest .sq-swatch { width: 14px; height: 14px; border: 1px solid var(--sq-line); cursor: pointer; }
+.studyquest .sq-swatch.is-on { outline: 2px solid var(--sq-accent); outline-offset: 1px; }
+.studyquest .sq-variants { display: inline-flex; flex-wrap: wrap; gap: 3px; max-width: 360px; }
+.studyquest .sq-chip { font-size: 11px; padding: 1px 8px; border: 1px solid var(--sq-line); cursor: pointer; background: none; }
+.studyquest .sq-chip.is-on { border-color: var(--sq-accent); color: var(--sq-accent); }
+.studyquest .sq-done { align-self: flex-start; margin-top: 8px; }
+.studyquest .sq-subtabs { display: flex; gap: 14px; border-bottom: 1px solid var(--sq-line); margin-bottom: 6px; }
+.studyquest .sq-subtab { padding: 4px 0; font-size: 12px; color: var(--sq-muted); cursor: pointer; }
+.studyquest .sq-subtab.is-on { color: var(--sq-fg); border-bottom: 2px solid var(--sq-accent); }
+.studyquest .sq-save-bar { display: flex; gap: 8px; margin-top: 8px; }
+.studyquest .sq-shelf.is-locked { opacity: 0.45; }
+.studyquest .sq-shop-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.studyquest .sq-shop-item { width: 92px; border: 1px solid var(--sq-line); padding: 4px; display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; }
+.studyquest .sq-shop-thumb { height: 64px; }
+.studyquest .sq-shop-name { font-size: 10px; line-height: 1.2; min-height: 24px; }
+.studyquest .sq-price { font-size: 11px; color: var(--sq-gold); padding: 1px 10px; }
+.studyquest .sq-owned { font-size: 10px; color: var(--sq-accent); }
+.sq-credits pre { white-space: pre-wrap; font-size: 11px; max-height: 60vh; overflow: auto; }
