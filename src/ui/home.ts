@@ -13,10 +13,11 @@ import {
   type HomeRow,
 } from "../core/derive";
 import { tierLabel } from "../core/prestige";
+import { runBadges, runRewards } from "../core/rewards";
 import type { QuestStore } from "../store/quest-store";
 import type { RunChoice } from "../store/run-choice";
 import { openCompleteMenu } from "./complete-menu";
-import { renderObjectiveMeta, renderSprite, renderTypeTag, type Navigate } from "./parts";
+import { renderBadges, renderLevel, renderObjectiveMeta, renderSprite, renderTypeTag, type Navigate } from "./parts";
 
 export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, clock: Clock, app: App, choice: RunChoice): void {
   const s = store.state;
@@ -35,7 +36,8 @@ export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, cl
     const score = runScore(s, run.id);
     const box = el.createDiv({ cls: "sq-empty" });
     box.createEl("p", { text: `${run.name} is closed.` });
-    box.createEl("p", { cls: "sq-closed-score", text: `${score.pct === null ? "—" : `${score.pct}%`} · ${tierLabel(score.tier ?? 0)}` });
+    const level = runRewards(s, run.id).level.level;
+    box.createEl("p", { cls: "sq-closed-score", text: `${score.pct === null ? "—" : `${score.pct}%`} · ${tierLabel(score.tier ?? 0)} · Level ${level}` });
     const buttons = box.createDiv({ cls: "sq-prestige-buttons" });
     buttons.createEl("button", { text: "Go to Setup", cls: "mod-cta" }).onClickEvent(() => nav({ tab: "setup" }));
     buttons.createEl("button", { text: "Open Hall" }).onClickEvent(() => nav({ tab: "hall" }));
@@ -75,8 +77,11 @@ export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, cl
     row.onClickEvent(() => nav({ tab: "course", run: run.id, course: c.code }));
   }
 
-  const player = top.createDiv({ cls: "sq-player" });
-  renderSprite(player);
+  renderBadges(middle, runBadges(s, run.id));
+
+  const side = top.createDiv({ cls: "sq-player-col" });
+  renderSprite(side.createDiv({ cls: "sq-player" }));
+  renderLevel(side, runRewards(s, run.id));
 
   // ── objectives ──
   el.createEl("h4", { cls: "sq-section", text: "Objectives" });

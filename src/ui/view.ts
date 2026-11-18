@@ -1,6 +1,7 @@
 import { ItemView, Notice, type WorkspaceLeaf } from "obsidian";
 import { localDateOf } from "../core/dates";
 import { chosenRun, openRuns, runScore, unseenPrestige } from "../core/derive";
+import { permanentBadges, runRewards } from "../core/rewards";
 import type { CourseFolders } from "../store/course-folders";
 import type { QuestStore } from "../store/quest-store";
 import type { RunChoice } from "../store/run-choice";
@@ -81,7 +82,9 @@ export class StudyQuestView extends ItemView {
     // A closed run nobody has seen yet takes over the whole view.
     const unseen = unseenPrestige(this.store.state)[0];
     if (unseen) {
-      renderPrestigeUp(root, unseen, runScore(this.store.state, unseen.id), async () => {
+      const s = this.store.state;
+      const unlocked = permanentBadges(s).filter((b) => b.run === unseen.id);
+      renderPrestigeUp(root, unseen, runScore(s, unseen.id), runRewards(s, unseen.id), unlocked, async () => {
         const r = await this.store.dispatch({ type: "acknowledgePrestige", run: unseen.id });
         if (!r.ok) new Notice(r.error);
         else if (unseenPrestige(this.store.state).length === 0) this.openSetupForNewRun();

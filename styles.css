@@ -150,3 +150,17 @@
 .studyquest .sq-evidence { font-size: 12px; color: var(--sq-accent); text-decoration: none; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .studyquest .sq-evidence:hover { text-decoration: underline; }
 .studyquest .sq-evidence.is-missing { color: var(--sq-faint); text-decoration: line-through; }
+
+/* ── phase 5a: level, XP, coins, badges ── */
+.studyquest .sq-player-col { display: flex; flex-direction: column; gap: 6px; flex: none; width: 140px; }
+.studyquest .sq-level-line { display: flex; justify-content: space-between; font-size: 12px; }
+.studyquest .sq-level-n { font-weight: 600; }
+.studyquest .sq-coins { color: var(--sq-muted); }
+.studyquest .sq-xp-bar { display: block; height: 4px; margin-top: 4px; background: var(--sq-track); }
+.studyquest .sq-xp-fill { display: block; height: 100%; background: var(--sq-accent); }
+.studyquest .sq-badges { display: flex; flex-wrap: wrap; gap: 4px; min-height: 20px; margin-top: 8px; }
+.studyquest .sq-badge { font-size: 10px; padding: 1px 6px; border: 1px solid var(--sq-accent); color: var(--sq-accent); }
+.studyquest .sq-badge.is-permanent { border-color: var(--sq-gold); color: var(--sq-gold); }
+.studyquest .sq-card-level { font-size: 11px; color: var(--sq-muted); }
+.studyquest .sq-prestige-level { font-size: 14px; letter-spacing: 1px; color: var(--sq-muted); }
+.studyquest .sq-prestige-unlocked { font-size: 13px; color: var(--sq-gold); }

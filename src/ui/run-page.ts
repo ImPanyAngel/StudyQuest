@@ -2,9 +2,10 @@ import { formatShort } from "../core/dates";
 import type { App } from "obsidian";
 import { courseObjectives, courseProgress, objectiveLabel, runScore, stains } from "../core/derive";
 import { tierLabel } from "../core/prestige";
+import { badgesEarnedBy, runRewards } from "../core/rewards";
 import type { QuestStore } from "../store/quest-store";
 import { renderEvidence } from "./evidence-link";
-import { renderMark, renderObjectiveMeta, renderTypeTag, stainLabel, type Navigate, type Route } from "./parts";
+import { renderBadges, renderMark, renderObjectiveMeta, renderTypeTag, stainLabel, type Navigate, type Route } from "./parts";
 
 /** Every objective of one run, grouped by course. Read only. */
 export function renderRunPage(el: HTMLElement, store: QuestStore, route: Extract<Route, { tab: "run" }>, nav: Navigate, app: App): void {
@@ -20,10 +21,16 @@ export function renderRunPage(el: HTMLElement, store: QuestStore, route: Extract
   const head = el.createDiv({ cls: "sq-run-head" });
   const title = [run.name, score.pct === null ? "—" : `${score.pct}%`];
   if (closed) title.push(tierLabel(score.tier ?? 0));
+  title.push(`Level ${runRewards(s, run.id).level.level}`);
   head.createDiv({ cls: "sq-run-title", text: title.join(" · ") });
   const sub = [`${formatShort(run.start)} → ${formatShort(run.end)}`, `${score.done} of ${score.total}`];
   if (closed) sub.push(stainLabel(stains(s, run.id).length));
   head.createDiv({ cls: "sq-hint", text: sub.join(" · ") });
+
+  el.createEl("h4", { cls: "sq-section", text: "Badges" });
+  const badges = badgesEarnedBy(s, run.id);
+  if (badges.length === 0) el.createDiv({ cls: "sq-muted", text: "No badges." });
+  else renderBadges(el, badges);
 
   if (run.courses.size === 0) el.createDiv({ cls: "sq-muted", text: "No courses." });
   for (const c of run.courses.values()) {

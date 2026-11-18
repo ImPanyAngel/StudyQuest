@@ -1,5 +1,6 @@
 import { formatShort } from "../core/dates";
 import { KIND_NAMES, type Kind } from "../core/events";
+import type { Badge, RunRewards } from "../core/rewards";
 import type { ObjectiveState } from "../core/state";
 
 export type Route =
@@ -45,4 +46,23 @@ export function renderMark(parent: HTMLElement, o: ObjectiveState, closed: boole
 
 export function stainLabel(n: number): string {
   return n === 0 ? "no stains" : n === 1 ? "1 stain" : `${n} stains`;
+}
+
+/** "Level N", coins, and the XP bar toward the next level. */
+export function renderLevel(parent: HTMLElement, r: RunRewards): void {
+  const box = parent.createDiv({ cls: "sq-level" });
+  const line = box.createDiv({ cls: "sq-level-line" });
+  line.createSpan({ cls: "sq-level-n", text: `Level ${r.level.level}` });
+  line.createSpan({ cls: "sq-coins", text: `${r.coins} coins` });
+  const bar = box.createDiv({ cls: "sq-xp-bar" });
+  bar.setAttr("title", `${r.level.xpIntoLevel} / ${r.level.xpForNextLevel} XP to level ${r.level.level + 1}`);
+  bar.createSpan({ cls: "sq-xp-fill" }).style.width = `${(100 * r.level.xpIntoLevel) / r.level.xpForNextLevel}%`;
+}
+
+/** Badge chips; permanent ones (no course) in gold. The line keeps its height when empty. */
+export function renderBadges(parent: HTMLElement, badges: Badge[]): void {
+  const line = parent.createDiv({ cls: "sq-badges" });
+  for (const b of badges) {
+    line.createSpan({ cls: b.course ? "sq-badge" : "sq-badge is-permanent", text: b.course ? `${b.name} · ${b.course}` : b.name });
+  }
 }

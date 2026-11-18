@@ -1,6 +1,7 @@
 import { formatShort, localDateOf, type Clock } from "../core/dates";
 import { hallRuns, runScore, stains } from "../core/derive";
 import { tierLabel } from "../core/prestige";
+import { runRewards } from "../core/rewards";
 import type { RunState } from "../core/state";
 import type { QuestStore } from "../store/quest-store";
 import { stainLabel, type Navigate } from "./parts";
@@ -22,6 +23,7 @@ export function renderHall(el: HTMLElement, store: QuestStore, nav: Navigate, cl
     const score = runScore(s, r.id);
     const meta = c.createDiv({ cls: "sq-card-meta" });
     meta.createSpan({ cls: "sq-card-pct", text: score.pct === null ? "—" : `${score.pct}%` });
+    meta.createSpan({ cls: "sq-card-level", text: `Lv ${runRewards(s, r.id).level.level}` });
     if (live) {
       meta.createSpan({ cls: "sq-hint", text: r.start > today ? `starts ${formatShort(r.start)}` : `ends ${formatShort(r.end)}` });
     } else {
