@@ -70,8 +70,16 @@ describe("notebooks", () => {
   });
 
   test("an empty code cell is refused; a missing source counts as empty", () => {
-    expect(checkNotebook(nb(md, { source: "x = 1" }, { source: "   \n" }))).toBe("Cell 3 is empty.");
-    expect(checkNotebook(nb({}))).toBe("Cell 1 is empty.");
+    expect(checkNotebook(nb(md, { source: "x = 1" }, { source: "   \n" }, { source: "y = 2" }))).toBe("Cell 3 is empty.");
+    expect(checkNotebook(nb({}, { source: "x = 1" }))).toBe("Cell 1 is empty.");
+  });
+
+  test("empty code cells after the last filled one are ignored (Jupyter adds one on Shift+Enter)", () => {
+    expect(checkNotebook(nb({ source: "x = 1" }, { source: [] }, md, { source: "" }))).toBeNull();
+  });
+
+  test("a notebook whose code cells are all empty has no code", () => {
+    expect(checkNotebook(nb({}, { source: "  " }))).toBe("This notebook has no code.");
   });
 
   test("a string source is checked like a list", () => {

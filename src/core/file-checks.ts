@@ -29,13 +29,18 @@ export function checkNotebook(text: string): string | null {
   }
   if (!Array.isArray(cells)) return "Couldn't read this notebook.";
 
+  // Code cells' text by position; other cell types are null. Numbered across every cell type, as Jupyter shows them.
+  const sources = cells.map((cell: { cell_type?: unknown; source?: unknown } | null) =>
+    cell?.cell_type !== "code" ? null : Array.isArray(cell.source) ? cell.source.join("") : typeof cell.source === "string" ? cell.source : "",
+  );
+  // Empty code cells after the last filled one are ignored: Jupyter adds one on Shift+Enter at the end.
+  const lastFilled = sources.findLastIndex((src) => src !== null && src.trim() !== "");
+  if (lastFilled === -1) return "This notebook has no code.";
+
   const problems: string[] = [];
-  let codeCells = 0;
-  cells.forEach((cell: { cell_type?: unknown; source?: unknown } | null, i) => {
-    if (cell?.cell_type !== "code") return;
-    codeCells++;
-    const n = i + 1; // numbered across every cell type, as Jupyter shows them
-    const source = Array.isArray(cell.source) ? cell.source.join("") : typeof cell.source === "string" ? cell.source : "";
+  sources.slice(0, lastFilled + 1).forEach((source, i) => {
+    if (source === null) return;
+    const n = i + 1;
     if (source.trim() === "") {
       problems.push(`Cell ${n} is empty`);
       return;
@@ -57,7 +62,6 @@ export function checkNotebook(text: string): string | null {
     });
   });
 
-  if (codeCells === 0) return "This notebook has no code.";
   if (problems.length === 0) return null;
   return problems.length === 1 ? `${problems[0]}.` : `${problems[0]} (and ${problems.length - 1} more).`;
 }
