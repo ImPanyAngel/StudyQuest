@@ -1,6 +1,6 @@
 # StudyQuest — Design Doc
 
-Nov 14, 2026 · Panayiotis Angelides · updated Nov 16, 2026
+Nov 14, 2026 · Panayiotis Angelides · updated Nov 17, 2026
 
 ## Overview
 
@@ -10,9 +10,9 @@ Design principles:
 
 - **Objectives, not time.** Progress only comes from completed things: a lecture, an assignment, a lab, a reading, a step of progress. Minutes studied are never tracked.
 - **History is permanent.** A closed quarter can't be edited. An incomplete quarter stays visible as a stain.
-- **Honest by design.** Locked roadmaps, no deleting, and a visible difference between AI-verified and self-claimed work.
+- **Honest by design.** Locked roadmaps, no deleting, and evidence files that are checked before they count.
 - **Lives where the work lives.** It runs inside the Obsidian vault that already holds all uni notes, so evidence is just the notes themselves.
-- **Mac only.** Study stays off the phone. Viewing, adding, claiming and verifying all happen on the Mac.
+- **Mac only.** Study stays off the phone. Viewing, adding and completing all happen on the Mac.
 
 ## Core concepts
 
@@ -47,23 +47,21 @@ The prestige score means something because objectives can be added but never rem
 
 **Completing an objective**
 
-- **Gold:** you link evidence and it passes verification.
-- **Silver:** you self-claim it, either because verification failed and you overrode it, or because there's nothing to upload (e.g. a paper book).
-- **Sat:** exams only, set automatically once the exam date passes. A neutral mark, neither gold nor silver.
-- All three count as complete. The difference shows permanently on the objective and in the run's prestige card.
+- **Done:** lectures, assignments and labs need an evidence file from the vault that passes the file checks (see File checks) and isn't already used by another objective. Readings are marked finished.
+- **Sat:** exams only, set automatically once the exam date passes. A neutral mark.
+- Both count as complete. The mark shows permanently on the objective.
 
 ```mermaid
 flowchart LR
-  A[Objective open] --> B[Evidence linked]
+  A[Objective open] --> B[Pick a file]
   B --> C{Checks pass?}
-  C -- yes --> D[Gold: complete]
-  C -- no --> E[Check failed]
-  E -- fix and retry --> B
-  E -- override --> F[Silver: complete]
+  C -- yes --> D[Done]
+  C -- no --> E[Refused, with the reason]
+  E -- fix and pick again --> B
   A -- run ends --> G[Stays a stain]
 ```
 
-A failed check can be fixed and retried, or overridden to silver. Self-claiming with nothing to upload goes straight to silver.
+A refused file can be fixed and picked again; there's no override.
 
 **Run end and prestige tiers**
 
@@ -105,47 +103,23 @@ StudyQuest/
 
 Everything runs on the Mac. The iPhone isn't a target. If the vault is synced to other devices the log is just a file there, but the plugin doesn't load on mobile.
 
-## AI verification
+## File checks
 
-Verification runs locally on the Mac. Simple rule checks come first, and Apple's on-device Apple Intelligence model handles only the judgement calls, with Ollama as the fallback. It checks that the work looks complete, not that you understood it.
+Plain rules, no AI. They run instantly when an evidence file is picked, and never again: an accepted file stays accepted even if it's later edited or deleted.
 
-**Two stages**
+- **Notebooks (`.ipynb`).** Refused if the notebook can't be read, has no code cells, has an empty code cell, or has a `TODO` / `YOUR CODE HERE` comment still followed by a placeholder (`pass`, `...`, `None`, `raise NotImplementedError`). Saved outputs aren't required. The message names the cell, e.g. "Cell 15: the TODO is still `pass` (and 14 more)."
+- **Notes (`.md`).** Refused if fewer than 5,000 characters remain after removing frontmatter.
+- **Everything else** (PDFs, images, slides) passes.
 
-1. **Rule checks (no AI, instant).** For a notebook: every code cell has code, cells have outputs, and nothing like `TODO` or `raise NotImplementedError` is left. For notes: not empty and above a minimum length.
-2. **Model check (on-device, local).** For notes: compare the note against the lecture's topic list, taken from the roadmap or slide text, and judge whether most topics are covered. The model returns pass or fail plus a one-line reason, which is saved in the log.
-
-**Setup**
-
-- **First choice: Apple Intelligence on-device model.** A desktop plugin can run commands, so it can call Apple's model in one of two ways:
-  - A Shortcut using the Use Model action set to On-Device, run from the plugin with `shortcuts run`. This is the quickest to prototype.
-  - A small Swift command-line helper using Apple's Foundation Models framework. It gives more control and a structured pass/fail result.
-- Apple Intelligence must be switched on. The on-device model is small and has a short context window, so long notes are checked in chunks.
-- **Fallback: Ollama** at `localhost:11434` with a small model, if Apple's model proves too weak or slow on real notes.
-- On a failure the reason is shown, and you can fix the work and retry, or override to silver.
-
-**Ollama model picks (for the fallback)**
-
-| Model | Ollama tag | Download | Context | Role |
-| --- | --- | --- | --- | --- |
-| Qwen3.5 9B | `qwen3.5:9b` | 6.6–7.6 GB | 256K | First pick: fits in 18 GB alongside Obsidian, reads text and images |
-| Qwen3.5 4B | `qwen3.5:4b` | 3.3–4.0 GB | 256K | Lighter backup if the 9B is too slow |
-| Gemma 4 12B | `gemma4:12b` | 7.7–8.0 GB | 256K | Alternative to test against the 9B |
-
-- Use Ollama's structured outputs (a JSON schema in `format`) so every verdict comes back as `{"pass": bool, "reason": string}`.
-- Turn thinking mode off for speed, and cap the context at about 16–32K tokens to save memory.
-- Pick by testing: run 5–10 real lecture notes through Apple's model, the 4B and the 9B, and keep the smallest that judges them correctly.
-
-Sources: [Ollama qwen3.5](https://ollama.com/library/qwen3.5), [Ollama gemma4](https://ollama.com/library/gemma4).
-
-The exact meaning of "complete" for each type is still to be decided (see Open questions).
+**Later.** AI checks were tested on real notes (results in `docs/superpowers/specs/2026-11-17-phase-4-checks-design.md`): Apple's on-device model accepted every wrong title, and a local 9B model through Ollama was slow, heavy on this laptop and still unreliable, so they were left out. A remote API or a homelab could bring them back.
 
 ## Rewards and pixel character
 
 Rewards stay small. Coins buy everyday cosmetics, and the best cosmetics can only be earned through achievements.
 
-- **XP and levels.** Every completed objective gives XP, weighted by type (an assignment is worth more than a lecture). Gold gives a bonus over silver.
+- **XP and levels.** Every completed objective gives XP, weighted by type (an assignment is worth more than a lecture).
 - **Coins.** Earned with XP and spent in a small cosmetics shop.
-- **Achievement unlocks.** Some cosmetics can't be bought, e.g. for a course at 100%, a first Tier 5 run, or every lecture in a course gold.
+- **Achievement unlocks.** Some cosmetics can't be bought, e.g. for a course at 100%, a first Tier 5 run, or every lecture in a course done.
 - **Character.** Layered pixel sprites (base, hair, top, bottom, accessory, background) at a small native size, scaled up with crisp pixels. The details are still open.
 - **Prestige snapshot.** Each prestige card keeps the outfit you wore that run, so the history doubles as a wardrobe timeline.
 
@@ -158,7 +132,7 @@ Styling is unrestricted. Plugin views are plain HTML, CSS and canvas, so StudyQu
 | Home | Completion ring, exam week, course list with %, character, open objectives (see `docs/Home Prototype Design.png`) |
 | Setup | Run dates, courses, adding objectives |
 | Course | One course's full objective list with marks, roadmap lock state, completion % (opened from Home) |
-| Objective | Linked evidence, verify button, verification result, gold or silver |
+| Objective | Linked evidence, DONE / SAT / OPEN / STAIN mark |
 | Prestige hall | Past runs as cards: tier, %, stains, outfit snapshot |
 | Wardrobe and shop | Equip and buy cosmetics, see locked achievement items |
 | Roadmap import | Drop in a roadmap, review the drafted objectives, lock |
@@ -171,8 +145,10 @@ All state is an append-only event log, one JSON object per line. Everything else
 
 ```
 {"id":"e_01J…","t":"2026-11-14T20:31:00Z","type":"objective_added","obj":"DSAIT4010-L05","course":"DSAIT4010","kind":"lecture","source":"roadmap"}
-{"id":"e_01J…","t":"2026-11-16T10:02:00Z","type":"objective_completed","obj":"DSAIT4010-L05","tier":"gold","evidence":"DSAIT4010/Lecture 5.md","reason":"Covers 6 of 7 topics"}
+{"id":"e_01J…","t":"2026-11-16T10:02:00Z","type":"objective_completed","obj":"DSAIT4010-L05","tier":"silver","evidence":"DSAIT4010/Lecture 5.md"}
 ```
+
+`"silver"` is the stored name for DONE.
 
 | Event | Meaning |
 | --- | --- |
@@ -182,8 +158,7 @@ All state is an append-only event log, one JSON object per line. Everything else
 | `roadmap_locked` | A course's imported objectives become fixed |
 | `objective_undone` | Removal within the undo window only |
 | `evidence_linked` | A note or file is attached to an objective |
-| `verification_run` | Result of a check: pass/fail + reason |
-| `objective_completed` | Gold or silver |
+| `objective_completed` | DONE (stored as silver) or sat |
 | `purchase` / `equip` | Shop and wardrobe actions |
 
 Every event has a unique ID. Replay de-duplicates by ID and orders by time, as a safeguard against accidental duplicate lines.
@@ -195,16 +170,18 @@ Phases 1–2 make it usable for Q2 with manual objectives. Each later phase adds
 1. **Core loop.** Plugin scaffold, runs, courses, objectives, manual adding, self-claim, exam auto-sat, the event log, Home, course view and Setup. Spec: `docs/superpowers/specs/2026-11-16-phase-1-core-loop-design.md`.
 2. **Prestige.** No-delete with an undo window, run close, tiers, Prestige hall.
 3. **Obsidian linking.** Frontmatter tags, course folders, the link command, evidence on objectives.
-4. **Verification.** Rule checks for notebooks and notes, Apple on-device model check (Ollama as fallback), gold vs silver.
+4. **File checks and one DONE mark.** Notebook and note rules on the picked file; silver and gold replaced by DONE. Spec: `docs/superpowers/specs/2026-11-17-phase-4-checks-design.md`.
 5. **Roadmap import.** Drop in a roadmap or schedule, get a drafted objective list, review, lock.
 6. **Character and rewards.** XP, levels, coins, shop, wardrobe, pixel sprites, outfit snapshots.
 
+Later, maybe: AI checks through a remote API or a homelab.
+
 ## Open questions
 
-- [ ] What does "complete" mean for each objective type?
+- [x] What does "complete" mean for each objective type? Answer: done = an evidence file that passes the file checks (lectures, assignments, labs) or marked finished (readings); exams are sat.
 - [x] Courses that run across two quarters? Answer: no course takes more than a quarter except the final thesis, which takes 3. The thesis is one prestige run spanning those quarters.
 - [x] Undo window for manual objectives? Answer: 30 minutes.
-- [x] Should silver count fully towards 100%, or partly? Answer: fully.
+- [x] Should done count fully towards 100%, or partly? Answer: fully.
 - [x] Exam objectives: keep them, and what counts as evidence? Answer: keep them. No evidence; they complete automatically as "sat" once their date (in exam week) passes.
 - [x] Quarter board screen? Answer: dropped. Home plus the course view cover it.
 - [x] Pixel art: draw it yourself, use a free asset pack, or a mix? Answer: free assets unless we can't find suitable ones, then draw.
