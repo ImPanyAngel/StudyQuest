@@ -4,7 +4,7 @@ export type Kind = "lecture" | "assignment" | "lab" | "reading" | "progress" | "
 export const KINDS: Kind[] = ["lecture", "assignment", "lab", "reading", "progress", "exam"];
 export const DATED_KINDS: Kind[] = ["assignment", "exam"];
 export const BULK_KINDS: Kind[] = ["lecture", "lab"];
-/** Kinds whose silver needs an evidence file. */
+/** Kinds whose DONE needs an evidence file. */
 export const EVIDENCE_KINDS: Kind[] = ["lecture", "assignment", "lab"];
 /** Kinds Setup offers. Progress is retired; old ones still replay. */
 export const ADDABLE_KINDS: Kind[] = ["lecture", "assignment", "lab", "reading", "exam"];
@@ -17,7 +17,7 @@ export const KIND_NAMES: Record<Kind, string> = {
   exam: "Exam",
 };
 
-/** Gold arrives in phase 4. */
+/** "silver" is the stored name for DONE; "sat" is exams only. */
 export type Tier = "silver" | "sat";
 
 interface Base {
@@ -84,7 +84,7 @@ export interface ObjectiveCompleted extends Base {
   type: "objective_completed";
   obj: string;
   tier: Tier;
-  /** Vault path of the file that proves it (lecture, assignment, lab silvers). */
+  /** Vault path of the file that proves it (lectures, assignments, labs). */
   evidence?: string;
 }
 

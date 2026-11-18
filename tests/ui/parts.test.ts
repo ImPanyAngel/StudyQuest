@@ -16,8 +16,8 @@ const obj = (completed?: ObjectiveState["completed"]): ObjectiveState => ({
   ...(completed ? { completed } : {}),
 });
 
-test("markOf: tier when complete, else STAIN on a closed run and OPEN on a running one", () => {
-  expect(markOf(obj({ tier: "silver", at: "x" }), true)).toEqual({ kind: "silver", text: "SILVER" });
+test("markOf: DONE or SAT when complete, else STAIN on a closed run and OPEN on a running one", () => {
+  expect(markOf(obj({ tier: "silver", at: "x" }), true)).toEqual({ kind: "done", text: "DONE" });
   expect(markOf(obj({ tier: "sat", at: "x" }), false)).toEqual({ kind: "sat", text: "SAT" });
   expect(markOf(obj(), true)).toEqual({ kind: "stain", text: "STAIN" });
   expect(markOf(obj(), false)).toEqual({ kind: "open", text: "OPEN" });

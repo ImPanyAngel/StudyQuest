@@ -3,7 +3,7 @@ import { evidenceOwner } from "../core/derive";
 import type { ObjectiveState } from "../core/state";
 import type { QuestStore } from "../store/quest-store";
 
-/** Searchable list of vault files; picking one completes the objective as silver with that file as evidence. */
+/** Searchable list of vault files; picking one completes the objective (DONE) with that file as evidence, after the file checks pass. */
 export class EvidencePicker extends FuzzySuggestModal<TFile> {
   private files: TFile[] | null = null;
 

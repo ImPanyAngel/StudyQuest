@@ -25,13 +25,10 @@ export function openCompleteMenu(evt: MouseEvent, obj: ObjectiveState, store: Qu
       const left = Math.max(1, Math.ceil((bumpDeadline(obj)!.getTime() - now.getTime()) / 60_000));
       menu.addItem((i) => i.setTitle(`Undo last bump · ${left} min left`).setIcon("undo").onClick(() => run(store, { type: "undoBump", obj: obj.id })));
     }
-    menu.addItem((i) => i.setTitle("Finished → silver").setIcon("check").onClick(() => run(store, { type: "selfCheck", obj: obj.id })));
+    menu.addItem((i) => i.setTitle("Finished → done").setIcon("check").onClick(() => run(store, { type: "selfCheck", obj: obj.id })));
     menu.showAtMouseEvent(evt);
     return;
   }
-
-  menu.addItem((i) => i.setTitle("Complete?").setIsLabel(true));
-  menu.addItem((i) => i.setTitle("AI check — arrives in phase 4").setIcon("sparkles").setDisabled(true));
 
   if (obj.kind === "progress" && obj.steps) {
     obj.steps.forEach((name, step) => {
@@ -45,7 +42,7 @@ export function openCompleteMenu(evt: MouseEvent, obj: ObjectiveState, store: Qu
   } else if (EVIDENCE_KINDS.includes(obj.kind)) {
     menu.addItem((i) =>
       i
-        .setTitle("Pick evidence file → silver…")
+        .setTitle("Pick the file that proves it → done…")
         .setIcon("file-check")
         .onClick(() => new EvidencePicker(app, store, obj).open()),
     );

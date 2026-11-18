@@ -1,7 +1,7 @@
 {
   "id": "studyquest",
   "name": "StudyQuest",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "minAppVersion": "1.7.2",
   "description": "Turns each university quarter into a game run.",
   "author": "Panayiotis Angelides",

@@ -272,7 +272,7 @@ function objectiveCompleted(state: State, e: ObjectiveCompleted): string | null 
     return "Unknown completion tier.";
   }
   if (e.evidence !== undefined) {
-    if (e.tier !== "silver" || !EVIDENCE_KINDS.includes(o.kind)) return "Only lecture, assignment and lab silvers take evidence.";
+    if (e.tier !== "silver" || !EVIDENCE_KINDS.includes(o.kind)) return "Only lectures, assignments and labs take evidence.";
     if (typeof e.evidence !== "string" || !e.evidence) return "Evidence needs a file path.";
     // A file already claimed by an earlier completion: keep the silver, drop only the claim.
     if (state.evidenceOwners.has(e.evidence)) {

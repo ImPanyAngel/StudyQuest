@@ -31,9 +31,10 @@ export function renderSprite(parent: HTMLElement): void {
   for (const part of ["head", "body", "leg-l", "leg-r"]) sprite.createDiv({ cls: `sq-sprite-${part}` });
 }
 
-/** SILVER / SAT (GOLD later) when complete; otherwise STAIN on a closed run, OPEN on a running one. */
+/** DONE (stored as "silver") or SAT when complete; otherwise STAIN on a closed run, OPEN on a running one. */
 export function markOf(o: ObjectiveState, closed: boolean): { kind: string; text: string } {
-  const kind = o.completed?.tier ?? (closed ? "stain" : "open");
+  const tier = o.completed?.tier;
+  const kind = tier === "silver" ? "done" : (tier ?? (closed ? "stain" : "open"));
   return { kind, text: kind.toUpperCase() };
 }
 

@@ -13,7 +13,6 @@
   --sq-soon: #e08a1e;
   --sq-overdue: #d9534f;
   --sq-gold: #c9a227;
-  --sq-silver: #9aa3b5;
   --sq-sat: #8a8a8a;
   --sq-font: ui-monospace, "SF Mono", Menlo, monospace;
 
@@ -91,9 +90,8 @@
 /* ── marks (course view) ── */
 .studyquest .sq-mark { font-size: 10px; padding: 2px 8px; min-width: 56px; text-align: center; flex: none; border: 1px solid var(--sq-line); }
 .studyquest .sq-mark.is-open { border-style: dashed; color: var(--sq-faint); }
-.studyquest .sq-mark.is-silver { border-color: var(--sq-silver); color: var(--sq-silver); }
+.studyquest .sq-mark.is-done { border-color: var(--sq-accent); color: var(--sq-accent); }
 .studyquest .sq-mark.is-sat { border-color: var(--sq-sat); color: var(--sq-sat); }
-.studyquest .sq-mark.is-gold { border-color: var(--sq-gold); color: var(--sq-gold); }
 .studyquest .is-done .sq-obj-title { color: var(--sq-muted); }
 
 /* ── course view ── */
