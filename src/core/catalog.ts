@@ -1,5 +1,6 @@
 /** The character art catalog: items from the generated sprite bundle, with slots, shelves and prices. */
 import index from "../../assets/sprites/items.json";
+import { displayName } from "./names";
 import type { BadgeId } from "./rewards";
 
 export type Body = "male" | "female";
@@ -32,7 +33,11 @@ export interface SpriteIndex {
   items: SpriteItem[];
 }
 
-export const SPRITES = index as unknown as SpriteIndex;
+/** The bundle, with tidy display names (the credits keep LPC's originals). */
+export const SPRITES: SpriteIndex = (() => {
+  const raw = index as unknown as SpriteIndex;
+  return { ...raw, items: raw.items.map((it) => ({ ...it, name: displayName(it.id, it.name) })) };
+})();
 const BY_ID = new Map(SPRITES.items.map((i) => [i.id, i]));
 
 export function item(id: string): SpriteItem | undefined {

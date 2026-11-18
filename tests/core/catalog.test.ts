@@ -26,7 +26,7 @@ test("items land on the shelves the user agreed", () => {
   expect(byName("Chainmail")!.level).toBe(8);
   expect(byName("Lizard Wings")!.level).toBe(11);
   expect(byName("Arming Sword")!.level).toBe(11);
-  expect(byName("Tattered")!.level).toBe(8);
+  expect(byName("Tattered Cape")!.level).toBe(8);
   expect(byName("Sandals")!.level).toBe(1);
 });
 

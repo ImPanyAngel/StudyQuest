@@ -108,7 +108,7 @@ function defaultColour(it: SpriteItem): string | undefined {
 export function looksRows(parent: HTMLElement, draft: Draft, rerender: () => void): void {
   const { body, look } = draft;
   swatches(row(parent, "Skin"), "body", look.skin, (skin) => ((look.skin = skin), rerender()));
-  const heads = itemsOfSlot("head", body).map((it) => ({ id: it.id, name: it.name.replace(/^Human /, "") }));
+  const heads = itemsOfSlot("head", body).map((it) => ({ id: it.id, name: it.name }));
   cycler(row(parent, "Head"), heads, look.head, (id) => ((look.head = id!), rerender()));
   const faces = itemsOfSlot("expression", body).map((it) => ({ id: it.id, name: it.name }));
   cycler(row(parent, "Face"), faces, look.face, (id) => ((look.face = id!), rerender()));
