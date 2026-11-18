@@ -1,4 +1,4 @@
-import { checkEvidence, checkNote, checkNotebook } from "../../src/core/file-checks";
+import { CHECKED_EXTENSIONS, checkEvidence, checkNote, checkNotebook } from "../../src/core/file-checks";
 
 type Cell = { type?: "code" | "markdown"; source?: string | string[] };
 const nb = (...cells: Cell[]): string =>
@@ -127,6 +127,11 @@ describe("notes", () => {
     expect(checkNote("---\r\ntitle: x\r\n---\r\n" + "a".repeat(4999))).toBe(msg("4,999"));
   });
 
+  test("an empty frontmatter block, or one after a byte-order mark, is not counted", () => {
+    expect(checkNote("---\n---\n" + "a".repeat(4999))).toBe(msg("4,999"));
+    expect(checkNote("\uFEFF---\ntitle: x\n---\n" + "a".repeat(4999))).toBe(msg("4,999"));
+  });
+
   test("an unclosed frontmatter block counts as text", () => {
     expect(checkNote("---\n" + "a".repeat(5000))).toBeNull();
   });
@@ -140,4 +145,9 @@ test("checkEvidence picks the rule by extension, any case; other files pass", ()
   expect(checkEvidence("IPYNB", nb(stub("TODO", "pass")))).toBe("Cell 1: the TODO is still `pass`.");
   expect(checkEvidence("md", "short")).toBe("This note has 5 characters; a note needs at least 5,000.");
   expect(checkEvidence("pdf", "")).toBeNull();
+});
+
+test("the checked extensions are exactly the ones with a rule", () => {
+  expect([...CHECKED_EXTENSIONS].sort()).toEqual(["ipynb", "md"]);
+  for (const ext of CHECKED_EXTENSIONS) expect(checkEvidence(ext, "")).not.toBeNull();
 });

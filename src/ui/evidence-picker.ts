@@ -50,35 +50,33 @@ export class EvidencePicker extends FuzzySuggestModal<TFile> {
       new Notice(`That file already proves ${owner.course} · ${owner.title}.`);
       return;
     }
-    if (this.checking) return;
+    if (this.checking) {
+      new Notice("Still checking the last file…");
+      return;
+    }
     if (!CHECKED_EXTENSIONS.includes(match.item.extension.toLowerCase())) {
       super.selectSuggestion(match, evt);
       return;
     }
     this.checking = true;
-    void this.check(match.item).then((passed) => {
-      this.checking = false;
-      if (passed && !this.closed) super.selectSuggestion(match, evt);
-    });
+    void this.check(match.item)
+      .then((refusal) => {
+        if (this.closed) return; // closed while reading: say nothing, complete nothing
+        if (refusal) new Notice(refusal);
+        else super.selectSuggestion(match, evt);
+      })
+      .finally(() => (this.checking = false));
   }
 
-  /** Reads the picked file and runs its rule; shows the reason and returns false when it's refused. */
-  private async check(picked: TFile): Promise<boolean> {
+  /** Reads the picked file and runs its rule. Returns the reason it's refused, or null when it passes. */
+  private async check(picked: TFile): Promise<string | null> {
     const f = this.app.vault.getFileByPath(picked.path);
-    if (!f) {
-      new Notice(`"${picked.path}" is no longer in the vault.`);
-      return false;
-    }
-    let text: string;
+    if (!f) return `"${picked.path}" is no longer in the vault.`;
     try {
-      text = await this.app.vault.cachedRead(f);
+      return checkEvidence(f.extension, await this.app.vault.cachedRead(f));
     } catch {
-      new Notice(`Couldn't read "${f.path}".`);
-      return false;
+      return `Couldn't read "${f.path}".`;
     }
-    const refusal = checkEvidence(f.extension, text);
-    if (refusal) new Notice(refusal);
-    return refusal === null;
   }
 
   onClose(): void {

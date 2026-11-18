@@ -1,22 +1,21 @@
 /** Rules an evidence file must pass when it's picked. Each returns a refusal message, or null when the file is fine. */
 
 export const MIN_NOTE_CHARS = 5000;
-/** Lowercase extensions that have a rule; every other file passes. */
-export const CHECKED_EXTENSIONS: readonly string[] = ["ipynb", "md"];
 
 const MARKER = /\bTODO\b|YOUR CODE HERE/i;
 const PLACEHOLDER = /^(pass|\.\.\.|None|raise NotImplementedError(\(.*\))?)$/;
-const FRONTMATTER = /^---\r?\n[\s\S]*?\r?\n---[ \t]*(\r?\n|$)/;
+/** A leading `---` … `---` block, possibly empty, possibly after a byte-order mark. */
+const FRONTMATTER = /^\uFEFF?---\r?\n([\s\S]*?\r?\n)?---[ \t]*(\r?\n|$)/;
+
+/** One rule per lowercase extension; every other file passes. */
+const RULES = new Map<string, (text: string) => string | null>([
+  ["ipynb", checkNotebook],
+  ["md", checkNote],
+]);
+export const CHECKED_EXTENSIONS: readonly string[] = [...RULES.keys()];
 
 export function checkEvidence(extension: string, text: string): string | null {
-  switch (extension.toLowerCase()) {
-    case "ipynb":
-      return checkNotebook(text);
-    case "md":
-      return checkNote(text);
-    default:
-      return null;
-  }
+  return RULES.get(extension.toLowerCase())?.(text) ?? null;
 }
 
 /** Refuses empty code cells and TODO / YOUR CODE HERE markers still followed by a placeholder. */
