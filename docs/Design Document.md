@@ -1,6 +1,6 @@
 # StudyQuest — Design Doc
 
-Nov 14, 2026 · Panayiotis Angelides · updated Nov 17, 2026
+Nov 14, 2026 · Panayiotis Angelides · updated Nov 18, 2026
 
 ## Overview
 
@@ -10,7 +10,7 @@ Design principles:
 
 - **Objectives, not time.** Progress only comes from completed things: a lecture, an assignment, a lab, a reading, a step of progress. Minutes studied are never tracked.
 - **History is permanent.** A closed quarter can't be edited. An incomplete quarter stays visible as a stain.
-- **Honest by design.** Locked roadmaps, no deleting, and evidence files that are checked before they count.
+- **Honest by design.** No deleting, and evidence files that are checked before they count.
 - **Lives where the work lives.** It runs inside the Obsidian vault that already holds all uni notes, so evidence is just the notes themselves.
 - **Mac only.** Study stays off the phone. Viewing, adding and completing all happen on the Mac.
 
@@ -19,8 +19,8 @@ Design principles:
 Everything hangs off three things: **prestige run → course → objective**.
 
 - **Prestige run.** A period with a start and end date, both entered manually from the TU Delft academic calendar. Normally a run is one quarter. The thesis is the exception: it is a single run that can span up to three quarters. When the end date passes, the run freezes into a prestige card in the history.
-- **Course.** Belongs to one run and maps to a folder in the vault (e.g. `DSAIT4010/`). It may have a roadmap and/or schedule, or neither. A course never extends past its run's end date.
-- **Objective.** One completable thing. Its fields are title, type, course, source (roadmap or manual), a date (assignments and exams only), linked evidence and status. Lectures, labs, readings and progress objectives have no date and can be done anytime. A due date can't fall after the run's end date, and an exam date always falls within exam week (the run's last 7 days).
+- **Course.** Belongs to one run and maps to a folder in the vault (e.g. `DSAIT4010/`). A course never extends past its run's end date.
+- **Objective.** One completable thing. Its fields are title, type, course, a date (assignments and exams only), linked evidence and status. Lectures, labs, readings and progress objectives have no date and can be done anytime. A due date can't fall after the run's end date, and an exam date always falls within exam week (the run's last 7 days).
 - **Resits.** The same course can appear in a later run if it has to be resat. Each attempt is its own course in its own run.
 
 | Type | Example | Evidence |
@@ -36,14 +36,13 @@ A **Progress** objective holds sub-steps (e.g. five chapters). It's complete onl
 
 ## Rules
 
-The prestige score means something because objectives can be added but never removed, and roadmap objectives are locked.
+The prestige score means something because objectives can be added but never removed.
 
 **Where objectives come from**
 
-1. **Roadmap or schedule import.** Drop in the course roadmap and/or schedule. The plugin drafts a list of objectives, which you review, edit and then lock. After locking, those objectives can't be edited or deleted.
-2. **Manual adding.** Allowed on every course at any time, including courses with a locked roadmap, because new things always come up.
-3. **No deleting.** Neither imported nor manual objectives can be deleted. The one exception is a short undo window right after adding a manual objective, for typos (30 minutes). Any completion ends that window early.
-4. **Locked dates.** A run's start and end dates lock once set, with the same 30-minute undo window.
+1. **Manual adding.** Objectives are added by hand in Setup, one at a time or as a numbered series (bulk-add), on every course at any time, because new things always come up. Roadmap and schedule import was dropped: without AI, every lecturer's layout would need its own reader.
+2. **No deleting.** Objectives can't be edited or deleted. The one exception is a short undo window right after adding an objective, for typos (30 minutes). Any completion ends that window early.
+3. **Locked dates.** A run's start and end dates lock once set, with the same 30-minute undo window.
 
 **Completing an objective**
 
@@ -84,17 +83,16 @@ StudyQuest is a community plugin written in TypeScript. It is desktop-only (`isD
 
 **Linking notes to objectives**
 
-- **Frontmatter tag.** A note with `objective: DSAIT4010-L05` in its frontmatter is picked up automatically as that objective's evidence.
-- **Command.** "Link current note to objective" in the command palette, so you never have to type IDs.
-- **Course folders.** Each course maps to a vault folder. When a new note appears there, the plugin suggests which open objective it belongs to.
-- **Non-markdown evidence.** Notebooks, PDFs and other files in the vault can be linked by path.
+- **File picker.** Completing a lecture, assignment or lab opens a searchable list of vault files, most recently changed first. Picking one links it as the evidence; it's shown on the objective and opens on click.
+- **One file, one objective.** A file already used by another objective (in any run) is marked "used" and refused.
+- **File checks.** Notebooks and notes must pass the rules in File checks; other files (PDFs, images, slides) are accepted as they are.
+- **Course folders.** Each course has a vault folder (default `CODE/`), stored and shown in Setup; nothing else uses it yet.
 
 **Vault layout**
 
 ```
 StudyQuest/
   log/2026-27-Q2.md     ← append-only event log, one file per run
-  roadmaps/             ← imported course roadmaps and schedules
 .obsidian/plugins/studyquest/
   data.json             ← plugin settings only
 ```
@@ -131,11 +129,10 @@ Styling is unrestricted. Plugin views are plain HTML, CSS and canvas, so StudyQu
 | --- | --- |
 | Home | Completion ring, exam week, course list with %, character, open objectives (see `docs/Home Prototype Design.png`) |
 | Setup | Run dates, courses, adding objectives |
-| Course | One course's full objective list with marks, roadmap lock state, completion % (opened from Home) |
+| Course | One course's full objective list with marks, evidence links, completion % (opened from Home) |
 | Objective | Linked evidence, DONE / SAT / OPEN / STAIN mark |
 | Prestige hall | Past runs as cards: tier, %, stains, outfit snapshot |
 | Wardrobe and shop | Equip and buy cosmetics, see locked achievement items |
-| Roadmap import | Drop in a roadmap, review the drafted objectives, lock |
 
 There's also a ribbon icon, a status-bar badge (e.g. "Q2 64%") and command-palette commands.
 
@@ -144,7 +141,7 @@ There's also a ribbon icon, a status-bar badge (e.g. "Q2 64%") and command-palet
 All state is an append-only event log, one JSON object per line. Everything else (XP, completion %, tiers, coins) is calculated by replaying it, so new achievements can apply to past work.
 
 ```
-{"id":"e_01J…","t":"2026-11-14T20:31:00Z","type":"objective_added","obj":"DSAIT4010-L05","course":"DSAIT4010","kind":"lecture","source":"roadmap"}
+{"id":"e_01J…","t":"2026-11-14T20:31:00Z","type":"objective_added","obj":"DSAIT4010-L05","course":"DSAIT4010","kind":"lecture","title":"Lecture 5","source":"manual"}
 {"id":"e_01J…","t":"2026-11-16T10:02:00Z","type":"objective_completed","obj":"DSAIT4010-L05","tier":"silver","evidence":"DSAIT4010/Lecture 5.md"}
 ```
 
@@ -154,11 +151,9 @@ All state is an append-only event log, one JSON object per line. Everything else
 | --- | --- |
 | `quarter_created` / `quarter_closed` | A run starts (with its manual start and end dates) / freezes into a prestige card |
 | `course_added` | A course joins a run, with its vault folder |
-| `objective_added` | Imported or manual objective |
-| `roadmap_locked` | A course's imported objectives become fixed |
+| `objective_added` | An objective added in Setup |
 | `objective_undone` | Removal within the undo window only |
-| `evidence_linked` | A note or file is attached to an objective |
-| `objective_completed` | DONE (stored as silver) or sat |
+| `objective_completed` | DONE (stored as silver), with the evidence file's path when one is needed, or sat |
 | `purchase` / `equip` | Shop and wardrobe actions |
 
 Every event has a unique ID. Replay de-duplicates by ID and orders by time, as a safeguard against accidental duplicate lines.
@@ -169,10 +164,9 @@ Phases 1–2 make it usable for Q2 with manual objectives. Each later phase adds
 
 1. **Core loop.** Plugin scaffold, runs, courses, objectives, manual adding, self-claim, exam auto-sat, the event log, Home, course view and Setup. Spec: `docs/superpowers/specs/2026-11-16-phase-1-core-loop-design.md`.
 2. **Prestige.** No-delete with an undo window, run close, tiers, Prestige hall.
-3. **Obsidian linking.** Frontmatter tags, course folders, the link command, evidence on objectives.
+3. **Evidence and readings.** An evidence file per completion, picked from the vault, one file per objective; readings as chapter counters. Spec: `docs/superpowers/specs/2026-11-17-phase-3-evidence-design.md`.
 4. **File checks and one DONE mark.** Notebook and note rules on the picked file; silver and gold replaced by DONE. Spec: `docs/superpowers/specs/2026-11-17-phase-4-checks-design.md`.
-5. **Roadmap import.** Drop in a roadmap or schedule, get a drafted objective list, review, lock.
-6. **Character and rewards.** XP, levels, coins, shop, wardrobe, pixel sprites, outfit snapshots.
+5. **Character and rewards.** XP, levels, coins, shop, wardrobe, pixel sprites, outfit snapshots.
 
 Later, maybe: AI checks through a remote API or a homelab.
 
@@ -188,4 +182,3 @@ Later, maybe: AI checks through a remote API or a homelab.
 - [x] Phone support? Answer: no. Mac only, to keep study off the phone.
 - [x] How are run dates set? Answer: manually, from the university's official quarter dates. No course or due date goes past the end date.
 - [ ] Tier names and the thresholds for tiers 1–4 (placeholders for now).
-- [ ] Can a due date change on a locked roadmap objective if the course moves a deadline?
