@@ -165,9 +165,6 @@ export function renderSetup(el: HTMLElement, store: QuestStore, clock: Clock, ui
     rerender();
   };
 
-  const importBtn = s3.createEl("button", { text: "Import roadmap / schedule — phase 5", cls: "sq-btn" });
-  importBtn.disabled = true;
-
   const list = s3.createDiv({ cls: "sq-objectives" });
   const objs = courseObjectives(s, run.id, course);
   if (objs.length === 0) list.createDiv({ cls: "sq-muted", text: "No objectives yet." });
