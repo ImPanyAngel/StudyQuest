@@ -18,7 +18,7 @@ export interface SpriteItem {
   matchBodyColor: boolean;
   layers: SpriteLayer[];
   /** One entry per colour channel; channel 0 is the main colour. */
-  recolor?: { material: string }[];
+  recolor?: { material: string; base?: string }[];
   /** Pre-coloured items: the variant names. */
   variants?: string[];
   /** "<variant><head kind>|<layer index>|<body>" → the reference frame key and its colour swaps. */

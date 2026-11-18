@@ -1,4 +1,4 @@
-import { BADGE_ITEMS } from "../../src/core/catalog";
+import { BADGE_ITEMS, SPRITES } from "../../src/core/catalog";
 import { defaultLook } from "../../src/core/character";
 import { drawList } from "../../src/core/draw-list";
 
@@ -33,4 +33,11 @@ test("items that aren't visible (a lapsed badge) are skipped; pre-coloured items
   const hidden = drawList(look, "male", (id) => id !== BADGE_ITEMS["lecture-sweep"]);
   expect(shown.length).toBe(hidden.length + 1);
   expect(shown.some((o) => o.colorMap && o.colorMap.length > 0)).toBe(true);
+});
+
+test("items drawn in their own base colour recolour from that base, not the material default", () => {
+  const look = { ...defaultLook("male"), worn: { socks: { item: "feet/socks/feet_socks_tabi", color: "red" } } };
+  const op = drawList(look, "male", (id) => id === "feet/socks/feet_socks_tabi")[0];
+  expect(op.recolor![0].from).toEqual(SPRITES.palettes.cloth.colors.brown);
+  expect(op.recolor![0].to).toEqual(SPRITES.palettes.cloth.colors.red);
 });

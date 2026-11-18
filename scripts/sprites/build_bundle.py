@@ -74,10 +74,13 @@ def colour_map(ref, var):
 def channels(recolors):
     if not recolors:
         return None
+    def ch(r):
+        # Some items are drawn in their own base colour rather than the material's default one.
+        return {"material": r["material"], **({"base": r["base"]} if r.get("base") else {})}
     if "material" in recolors:
-        return [{"material": recolors["material"]}]
+        return [ch(recolors)]
     keys = sorted(k for k in recolors if k.startswith("color_"))
-    return [{"material": recolors[k]["material"]} for k in keys if "material" in recolors[k]] or None
+    return [ch(recolors[k]) for k in keys if "material" in recolors[k]] or None
 
 
 def main(src, out):

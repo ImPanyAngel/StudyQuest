@@ -6,6 +6,15 @@ export interface Draft {
   run: string;
   body: Body;
   look: Look;
+  /** The saved look this draft started from (as JSON); a different one means the draft is stale. */
+  base?: string;
+}
+
+/** The draft to edit: the current one while it's still based on this saved look, run and body, else a fresh copy. */
+export function draftFor(current: Draft | undefined, run: string, body: Body, saved: Look): Draft {
+  const base = JSON.stringify(saved);
+  if (current && current.run === run && current.body === body && current.base === base) return current;
+  return { run, body, look: structuredClone(saved), base };
 }
 
 type Option = { id: string | null; name: string };

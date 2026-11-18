@@ -32,7 +32,9 @@ function opsFor(it: SpriteItem, body: Body, w: Partial<Worn>, look: Look): DrawO
         const p = SPRITES.palettes[ch.material];
         const name = ch.material === "body" ? look.skin : ch.material === "eye" ? look.eyes : i === 0 ? w.color : w.color2;
         const to = name !== undefined ? p?.colors[name] : undefined;
-        if (p && to) swaps.push({ from: p.base, to });
+        // An item drawn in its own base colour (e.g. brown socks) maps from that, not the material default.
+        const from = (ch.base && p?.colors[ch.base]) || p?.base;
+        if (p && from && to) swaps.push({ from, to });
       });
       ops.push({ ...at, zPos: layer.zPos, ...(swaps.length ? { recolor: swaps } : {}) });
       return;

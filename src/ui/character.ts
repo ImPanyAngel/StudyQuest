@@ -7,7 +7,7 @@ import type { Action } from "../core/actions";
 import type { QuestStore } from "../store/quest-store";
 import { CreditsModal } from "./credits-modal";
 import type { CharacterUi } from "./creation";
-import { colourControls, cycler, looksRows, row, slotName, type Draft } from "./look-editor";
+import { colourControls, cycler, draftFor, looksRows, row, slotName, type Draft } from "./look-editor";
 import { renderLevel, type Navigate, type Route } from "./parts";
 import { renderCharacter } from "./sprite";
 
@@ -42,9 +42,9 @@ export function renderCharacterPage(
     return;
   }
   const frozen = !!run.closed;
-  // Edits stay a draft until Save; a fresh copy whenever the saved look changes underneath.
-  if (ui.draft?.run !== run.id) ui.draft = { run: run.id, body: c.body, look: structuredClone(c.look) };
-  const draft = ui.draft;
+  // Edits stay a draft until Save; a fresh copy whenever the saved look changes underneath
+  // (an undone purchase, a log reloaded from another device).
+  const draft = (ui.draft = draftFor(ui.draft, run.id, c.body, c.look));
   const dirty = JSON.stringify(draft.look) !== JSON.stringify(c.look);
   const rewards = runRewards(s, run.id);
   const act = async (a: Action) => {
