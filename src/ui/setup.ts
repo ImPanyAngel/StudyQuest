@@ -15,7 +15,9 @@ import {
 } from "../core/derive";
 import { tierLabel } from "../core/prestige";
 import { ADDABLE_KINDS, BULK_KINDS, DATED_KINDS, type Kind } from "../core/events";
+import { defaultCourseFolder } from "../core/folders";
 import { runIdFromName } from "../core/ids";
+import type { CourseFolders } from "../store/course-folders";
 import type { QuestStore } from "../store/quest-store";
 import { renderEvidence } from "./evidence-link";
 import { KIND_LABELS, renderMark, renderObjectiveMeta, renderTypeTag } from "./parts";
@@ -28,7 +30,15 @@ export interface SetupUi {
   drafts: Record<string, string>;
 }
 
-export function renderSetup(el: HTMLElement, store: QuestStore, clock: Clock, ui: SetupUi, rerender: () => void, app: App): void {
+export function renderSetup(
+  el: HTMLElement,
+  store: QuestStore,
+  clock: Clock,
+  ui: SetupUi,
+  rerender: () => void,
+  app: App,
+  folders: CourseFolders,
+): void {
   const s = store.state;
   const now = clock();
   const today = localDateOf(now);
@@ -123,25 +133,31 @@ export function renderSetup(el: HTMLElement, store: QuestStore, clock: Clock, ui
     if (isResit(s, run.id, c.code)) row.createSpan({ cls: "sq-pill", text: "RESIT" });
     row.createSpan({ cls: "sq-hint", text: `folder: ${c.folder}` });
     if (!closed && canUndoCourse(s, run.id, c.code, now)) {
-      button(row, `Undo · ${minutesLeft(c.addedAt)} min left`, () => act({ type: "undoCourse", run: run.id, code: c.code }));
+      button(row, `Undo · ${minutesLeft(c.addedAt)} min left`, () =>
+        act({ type: "undoCourse", run: run.id, code: c.code }, () => {
+          folders.removeIfEmpty(c.folder).catch((e) => new Notice(`Course undone, but its folder couldn't be removed: ${message(e)}`));
+        }),
+      );
     }
   }
   if (!ended) {
     const row = s2.createDiv({ cls: "sq-form" });
     const code = field(row, "course.code", { placeholder: "Code, e.g. DSAIT4000" });
     field(row, "course.name", { placeholder: "Name" });
-    field(row, "course.folder", { placeholder: "Vault folder (default: CODE/)" });
+    field(row, "course.folder", { placeholder: "Vault folder (default: Courses/CODE/)" });
     button(row, "Add course", () => {
       const c = code.value.trim();
+      const folder = ui.drafts["course.folder"]?.trim() || defaultCourseFolder(c);
       return act(
         {
           type: "addCourse",
           run: run.id,
           code: c,
           name: ui.drafts["course.name"] ?? "",
-          folder: ui.drafts["course.folder"]?.trim() || `${c}/`,
+          folder,
         },
         () => {
+          folders.ensure(folder).catch((e) => new Notice(`Course added, but its folder couldn't be created: ${message(e)}`));
           ui.course = c;
           clear("course.code", "course.name", "course.folder");
         },
@@ -257,4 +273,8 @@ function kindSelect(parent: HTMLElement, kinds: Kind[], value: Kind, onChange: (
   for (const k of kinds) sel.createEl("option", { value: k, text: KIND_LABELS[k] });
   sel.value = value;
   sel.onchange = () => onChange(sel.value as Kind);
+}
+
+function message(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
 }

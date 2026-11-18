@@ -1,6 +1,7 @@
 import { Notice, Plugin } from "obsidian";
 import { nextLocalMidnight } from "./core/dates";
 import { unseenPrestige } from "./core/derive";
+import { CourseFolders } from "./store/course-folders";
 import { DayTicker, QuestStore } from "./store/quest-store";
 import { VaultLog } from "./store/vault-log";
 import { StatusBadge } from "./ui/status-bar";
@@ -16,7 +17,8 @@ export default class StudyQuestPlugin extends Plugin {
     const log = new VaultLog(this.app.vault);
     this.store = new QuestStore(log, () => new Date());
 
-    this.registerView(VIEW_TYPE, (leaf) => new StudyQuestView(leaf, this.store));
+    const folders = new CourseFolders(this.app);
+    this.registerView(VIEW_TYPE, (leaf) => new StudyQuestView(leaf, this.store, folders));
     this.addRibbonIcon("trophy", "Open StudyQuest", () => void this.openHome());
     this.addCommand({ id: "open-studyquest", name: "Open StudyQuest", callback: () => void this.openHome() });
     this.badge = new StatusBadge(this.addStatusBarItem(), this.store, this.store.clock, () => void this.openHome());

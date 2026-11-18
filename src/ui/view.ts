@@ -1,5 +1,6 @@
 import { ItemView, Notice, type WorkspaceLeaf } from "obsidian";
 import { runScore, unseenPrestige } from "../core/derive";
+import type { CourseFolders } from "../store/course-folders";
 import type { QuestStore } from "../store/quest-store";
 import { renderCourse } from "./course";
 import { renderHall } from "./hall";
@@ -19,6 +20,7 @@ export class StudyQuestView extends ItemView {
   constructor(
     leaf: WorkspaceLeaf,
     private store: QuestStore,
+    private folders: CourseFolders,
   ) {
     super(leaf);
   }
@@ -101,7 +103,7 @@ export class StudyQuestView extends ItemView {
         renderCourse(body, this.store, this.route, nav, clock, this.app);
         break;
       case "setup":
-        renderSetup(body, this.store, clock, this.setupUi, () => this.refresh(), this.app);
+        renderSetup(body, this.store, clock, this.setupUi, () => this.refresh(), this.app, this.folders);
         break;
       case "hall":
         renderHall(body, this.store, nav, clock);
