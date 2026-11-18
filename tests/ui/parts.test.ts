@@ -1,4 +1,4 @@
-import { markOf, stainLabel } from "../../src/ui/parts";
+import { BADGE_ICONS, badgeLabel, markOf, stainLabel } from "../../src/ui/parts";
 import type { ObjectiveState } from "../../src/core/state";
 
 const obj = (completed?: ObjectiveState["completed"]): ObjectiveState => ({
@@ -25,4 +25,10 @@ test("markOf: DONE or SAT when complete, else STAIN on a closed run and OPEN on 
 
 test("stainLabel is the same wording everywhere", () => {
   expect([0, 1, 4].map(stainLabel)).toEqual(["no stains", "1 stain", "4 stains"]);
+});
+
+test("badgeLabel names the course for in-run badges; every badge has an icon", () => {
+  expect(badgeLabel({ id: "course-complete", name: "Course complete", course: "DSAIT4005" })).toBe("Course complete · DSAIT4005");
+  expect(badgeLabel({ id: "tier-5", name: "Tier 5 run" })).toBe("Tier 5 run");
+  for (const id of ["course-complete", "lecture-sweep", "first-prestige", "tier-3", "tier-5"] as const) expect(BADGE_ICONS[id]).toEqual(expect.any(String));
 });

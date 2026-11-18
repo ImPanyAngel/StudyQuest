@@ -1,6 +1,6 @@
 import { formatShort } from "../core/dates";
 import { KIND_NAMES, type Kind } from "../core/events";
-import type { Badge, RunRewards } from "../core/rewards";
+import type { Badge, BadgeId, RunRewards } from "../core/rewards";
 import type { ObjectiveState } from "../core/state";
 
 export type Route =
@@ -26,7 +26,6 @@ export function renderObjectiveMeta(parent: HTMLElement, o: ObjectiveState, over
   }
 }
 
-/** The placeholder character until phase 6. */
 export function renderSprite(parent: HTMLElement): void {
   const sprite = parent.createDiv({ cls: "sq-sprite" });
   for (const part of ["head", "body", "leg-l", "leg-r"]) sprite.createDiv({ cls: `sq-sprite-${part}` });
@@ -59,10 +58,16 @@ export function renderLevel(parent: HTMLElement, r: RunRewards): void {
   bar.createSpan({ cls: "sq-xp-fill" }).style.width = `${(100 * r.level.xpIntoLevel) / r.level.xpForNextLevel}%`;
 }
 
-/** Badge chips; permanent ones (no course) in gold. The line keeps its height when empty. */
-export function renderBadges(parent: HTMLElement, badges: Badge[]): void {
-  const line = parent.createDiv({ cls: "sq-badges" });
-  for (const b of badges) {
-    line.createSpan({ cls: b.course ? "sq-badge" : "sq-badge is-permanent", text: b.course ? `${b.name} · ${b.course}` : b.name });
-  }
+/** Obsidian's built-in (Lucide) icon for each badge. */
+export const BADGE_ICONS: Record<BadgeId, string> = {
+  "course-complete": "graduation-cap",
+  "lecture-sweep": "book-open",
+  "first-prestige": "award",
+  "tier-3": "medal",
+  "tier-5": "crown",
+};
+
+/** Hover text: "Course complete · DSAIT4005" for in-run badges, the name alone for permanent ones. */
+export function badgeLabel(b: Badge): string {
+  return b.course ? `${b.name} · ${b.course}` : b.name;
 }

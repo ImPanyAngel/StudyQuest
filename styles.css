@@ -158,9 +158,10 @@
 .studyquest .sq-coins { color: var(--sq-muted); }
 .studyquest .sq-xp-bar { display: block; height: 4px; margin-top: 4px; background: var(--sq-track); }
 .studyquest .sq-xp-fill { display: block; height: 100%; background: var(--sq-accent); }
-.studyquest .sq-badges { display: flex; flex-wrap: wrap; gap: 4px; min-height: 20px; margin-top: 8px; }
-.studyquest .sq-badge { font-size: 10px; padding: 1px 6px; border: 1px solid var(--sq-accent); color: var(--sq-accent); }
-.studyquest .sq-badge.is-permanent { border-color: var(--sq-gold); color: var(--sq-gold); }
+.studyquest .sq-badges { display: flex; flex-wrap: wrap; gap: 6px; min-height: 20px; margin-top: 8px; }
+.studyquest .sq-badge { display: inline-flex; width: 20px; height: 20px; align-items: center; justify-content: center; color: var(--sq-accent); }
+.studyquest .sq-badge svg { width: 18px; height: 18px; }
+.studyquest .sq-badge.is-permanent { color: var(--sq-gold); }
 .studyquest .sq-card-level { font-size: 11px; color: var(--sq-muted); }
 .studyquest .sq-prestige-level { font-size: 14px; letter-spacing: 1px; color: var(--sq-muted); }
 .studyquest .sq-prestige-unlocked { font-size: 13px; color: var(--sq-gold); }

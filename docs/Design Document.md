@@ -115,9 +115,9 @@ Plain rules, no AI. They run instantly when an evidence file is picked, and neve
 
 Rewards stay small, and every run is a **roguelike run**: XP, level, coins and even the character start over each run. Overlapping runs keep their own. Everything is calculated from the log, so a retuned weight applies to past work too.
 
-- **XP and coins.** A finished objective earns XP for its run: lecture 10, lab 15, assignment 40, exam sat 50, reading 5 per chapter bump plus 20 when finished. Coins equal XP earned; coins get spent, XP never drops.
-- **Levels.** Every run starts at level 1. Going from level L to L + 1 costs 50 + 10 × (L − 1) XP, so a typical quarter reaches about level 12.
-- **Badges within a run.** Course complete (every objective of a course done) and Lecture sweep (every lecture of a course done). They hold while their condition does and end with the run.
+- **XP and coins.** A finished objective earns XP for its run: lecture 10, lab 15, assignment 40, exam sat 50, reading 5 per bump (at any level) plus 20 when finished, and 15 for an old Progress objective finished. Coins equal XP earned; coins get spent, XP never drops.
+- **Levels.** Every run starts at level 1. Going from level L to L + 1 costs 50 + 10 × (L − 1) XP, so a quarter of about 1,200 XP (four courses with lectures, a few labs, assignments and exams) reaches about level 12.
+- **Badges within a run.** Course complete (every objective of a course done) and Lecture sweep (every lecture of a course done). Badges show as icons; hovering one shows its name. They hold while their condition does and end with the run.
 - **Permanent badges.** First prestige (first run closed), Tier 3 run (first close at Tier 3 or better) and Tier 5 run (first close at Tier 5). Each is credited to the run that earned it and shown on its Prestige Up screen.
 - **Character (5b).** Layered pixel sprites (base, hair, top, bottom, accessory, background), made fresh each run: free basics at creation, clothes bought with that run's coins, in-run badges unlocking special items for that run, and permanent badges unlocking items free in every later run. Art: a free sprite sheet (LPC-style, CC-BY / OGA-BY / CC-BY-SA / GPL / CC0) with a credits file.
 - **Prestige snapshot.** Each prestige card keeps that run's character, so the Hall is a gallery of every character you've made.

@@ -17,7 +17,8 @@ import { runBadges, runRewards } from "../core/rewards";
 import type { QuestStore } from "../store/quest-store";
 import type { RunChoice } from "../store/run-choice";
 import { openCompleteMenu } from "./complete-menu";
-import { renderBadges, renderLevel, renderObjectiveMeta, renderSprite, renderTypeTag, type Navigate } from "./parts";
+import { renderBadges } from "./badges";
+import { renderLevel, renderObjectiveMeta, renderSprite, renderTypeTag, type Navigate } from "./parts";
 
 export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, clock: Clock, app: App, choice: RunChoice): void {
   const s = store.state;

@@ -5,7 +5,8 @@ import { tierLabel } from "../core/prestige";
 import { badgesEarnedBy, runRewards } from "../core/rewards";
 import type { QuestStore } from "../store/quest-store";
 import { renderEvidence } from "./evidence-link";
-import { renderBadges, renderMark, renderObjectiveMeta, renderTypeTag, stainLabel, type Navigate, type Route } from "./parts";
+import { renderBadges } from "./badges";
+import { renderMark, renderObjectiveMeta, renderTypeTag, stainLabel, type Navigate, type Route } from "./parts";
 
 /** Every objective of one run, grouped by course. Read only. */
 export function renderRunPage(el: HTMLElement, store: QuestStore, route: Extract<Route, { tab: "run" }>, nav: Navigate, app: App): void {
