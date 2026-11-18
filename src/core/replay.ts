@@ -3,12 +3,16 @@ import {
   DATED_KINDS,
   EVIDENCE_KINDS,
   KINDS,
+  type CharacterChanged,
+  type CharacterCreated,
   type CourseAdded,
   type CourseUndone,
   type ObjectiveAdded,
   type ObjectiveCompleted,
+  type ItemBought,
   type ObjectiveUndone,
   type PrestigeSeen,
+  type PurchaseUndone,
   type QuarterClosed,
   type QuarterCreated,
   type QuarterDatesCorrected,
@@ -63,6 +67,14 @@ export function applyEvent(state: State, e: QuestEvent): string | null {
       return readingBumped(state, e);
     case "reading_bump_undone":
       return readingBumpUndone(state, e);
+    case "character_created":
+      return characterCreated(state, e);
+    case "character_changed":
+      return characterChanged(state, e);
+    case "item_bought":
+      return itemBought(state, e);
+    case "purchase_undone":
+      return purchaseUndone(state, e);
     default:
       return "Unknown event type.";
   }
@@ -114,7 +126,7 @@ function quarterCreated(state: State, e: QuarterCreated): string | null {
   if (state.runs.has(e.run)) return `A run called "${e.name}" already exists.`;
   const bad = checkRunDates(e.start, e.end);
   if (bad) return bad;
-  state.runs.set(e.run, { id: e.run, name: e.name, start: e.start, end: e.end, createdAt: e.t, courses: new Map() });
+  state.runs.set(e.run, { id: e.run, name: e.name, start: e.start, end: e.end, createdAt: e.t, courses: new Map(), purchases: new Map() });
   return null;
 }
 
@@ -318,3 +330,42 @@ function hasProgress(o: ObjectiveState): boolean {
   return o.completed !== undefined || o.stepsDone.some(Boolean) || o.bumped;
 }
 
+// ── character ───────────────────────────────────────────────────────────
+// Shop rules (level, price, coins, what may be worn) are checked when an action is planned.
+// Replay trusts recorded history and checks only its shape, so retuning prices or shelves never
+// rewrites the past. Closed runs are already refused at the top of applyEvent.
+
+function characterCreated(state: State, e: CharacterCreated): string | null {
+  const run = state.runs.get(e.run);
+  if (!run) return "Unknown run.";
+  if (run.character) return "This run already has a character.";
+  if (e.body !== "male" && e.body !== "female") return "Unknown body.";
+  run.character = { body: e.body, look: structuredClone(e.look), createdAt: e.t };
+  return null;
+}
+
+function characterChanged(state: State, e: CharacterChanged): string | null {
+  const run = state.runs.get(e.run);
+  if (!run?.character) return "This run has no character yet.";
+  run.character.look = structuredClone(e.look);
+  return null;
+}
+
+function itemBought(state: State, e: ItemBought): string | null {
+  const run = state.runs.get(e.run);
+  if (!run?.character) return "This run has no character yet.";
+  if (run.purchases.has(e.item)) return "Already bought.";
+  run.purchases.set(e.item, { price: e.price, at: e.t });
+  return null;
+}
+
+function purchaseUndone(state: State, e: PurchaseUndone): string | null {
+  const run = state.runs.get(e.run);
+  const bought = run?.purchases.get(e.item);
+  if (!run || !bought) return "Nothing to undo.";
+  if (!withinUndoWindow(bought.at, e.t)) return "The undo window for this purchase has passed.";
+  run.purchases.delete(e.item);
+  const look = run.character?.look;
+  if (look) for (const [slot, w] of Object.entries(look.worn)) if (w.item === e.item) delete look.worn[slot];
+  return null;
+}

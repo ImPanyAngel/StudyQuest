@@ -1,3 +1,4 @@
+import type { Look } from "./character";
 import type { LocalDate } from "./dates";
 
 export type Kind = "lecture" | "assignment" | "lab" | "reading" | "progress" | "exam";
@@ -113,6 +114,34 @@ export interface PrestigeSeen extends Base {
   run: string;
 }
 
+export interface CharacterCreated extends Base {
+  type: "character_created";
+  run: string;
+  /** "male" or "female"; fixed for the run. */
+  body: string;
+  look: Look;
+}
+
+export interface CharacterChanged extends Base {
+  type: "character_changed";
+  run: string;
+  look: Look;
+}
+
+export interface ItemBought extends Base {
+  type: "item_bought";
+  run: string;
+  item: string;
+  /** What was paid; replay trusts it so later price changes never alter history. */
+  price: number;
+}
+
+export interface PurchaseUndone extends Base {
+  type: "purchase_undone";
+  run: string;
+  item: string;
+}
+
 export type QuestEvent =
   | QuarterCreated
   | QuarterDatesCorrected
@@ -125,7 +154,11 @@ export type QuestEvent =
   | QuarterClosed
   | PrestigeSeen
   | ReadingBumped
-  | ReadingBumpUndone;
+  | ReadingBumpUndone
+  | CharacterCreated
+  | CharacterChanged
+  | ItemBought
+  | PurchaseUndone;
 
 export const EVENT_TYPES: QuestEvent["type"][] = [
   "quarter_created",
@@ -140,6 +173,10 @@ export const EVENT_TYPES: QuestEvent["type"][] = [
   "prestige_seen",
   "reading_bumped",
   "reading_bump_undone",
+  "character_created",
+  "character_changed",
+  "item_bought",
+  "purchase_undone",
 ];
 
 /** The run an event belongs to. Objective ids carry their run before the `/`. */

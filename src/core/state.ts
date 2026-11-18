@@ -1,4 +1,5 @@
 import type { LocalDate } from "./dates";
+import type { Look } from "./character";
 import type { Kind, Tier } from "./events";
 import type { PrestigeTier } from "./prestige";
 
@@ -21,6 +22,10 @@ export interface RunState {
   closed?: { id: string; done: number; total: number; tier: PrestigeTier; at: string };
   /** Set by `prestige_seen`. */
   seenAt?: string;
+  /** Set by `character_created`; the look changes with `character_changed`. */
+  character?: { body: "male" | "female"; look: Look; createdAt: string };
+  /** Live purchases (not undone): item id → what was paid and when. */
+  purchases: Map<string, { price: number; at: string }>;
 }
 
 export interface ObjectiveState {

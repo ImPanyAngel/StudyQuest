@@ -1,8 +1,9 @@
 import { EVENT_TYPES, eventRun, type QuestEvent } from "./events";
 
-type FieldType = "string" | "number";
+type FieldType = "string" | "number" | "object";
 const S: FieldType = "string";
 const N: FieldType = "number";
+const O: FieldType = "object";
 
 /** Required fields per event type, with their JSON types. */
 const REQUIRED: Record<QuestEvent["type"], Record<string, FieldType>> = {
@@ -18,6 +19,10 @@ const REQUIRED: Record<QuestEvent["type"], Record<string, FieldType>> = {
   prestige_seen: { run: S },
   reading_bumped: { obj: S, level: N },
   reading_bump_undone: { obj: S },
+  character_created: { run: S, body: S, look: O },
+  character_changed: { run: S, look: O },
+  item_bought: { run: S, item: S, price: N },
+  purchase_undone: { run: S, item: S },
 };
 
 function wellFormed(e: Record<string, unknown>, type: QuestEvent["type"]): boolean {
@@ -29,7 +34,20 @@ function wellFormed(e: Record<string, unknown>, type: QuestEvent["type"]): boole
     if (e.levels !== undefined && !isStringArray(e.levels)) return false;
   }
   if (type === "objective_completed" && e.evidence !== undefined && typeof e.evidence !== "string") return false;
+  if ((type === "character_created" || type === "character_changed") && !isLook(e.look)) return false;
+  if (type === "item_bought" && !(Number.isFinite(e.price) && (e.price as number) >= 0)) return false;
   return true;
+}
+
+const isPlainObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+const optString = (v: unknown) => v === undefined || typeof v === "string";
+
+/** A look's shape: skin, head and face strings, optional eyes, and worn items each naming their item. */
+function isLook(v: unknown): boolean {
+  if (!isPlainObject(v)) return false;
+  if (typeof v.skin !== "string" || typeof v.head !== "string" || typeof v.face !== "string" || !optString(v.eyes)) return false;
+  if (!isPlainObject(v.worn)) return false;
+  return Object.values(v.worn).every((w) => isPlainObject(w) && typeof w.item === "string" && optString(w.color) && optString(w.color2));
 }
 
 function isStringArray(v: unknown): boolean {

@@ -64,3 +64,21 @@ test("parseLog reads levels, evidence and reading events, and checks their field
   ].map((l) => JSON.stringify(l));
   expect(parseLog(lines.join("\n")).map((e) => e.id)).toEqual(["ok1", "ok2", "ok3", "ok4"]);
 });
+
+test("parseLog reads character events and checks their shapes", () => {
+  const t = "2026-11-16T10:00:00.000Z";
+  const look = { skin: "light", head: "h", face: "f", worn: { hat: { item: "x", color: "red" } } };
+  const lines = [
+    { id: "e_1", t, type: "character_created", run: "R", body: "male", look },
+    { id: "e_2", t, type: "character_changed", run: "R", look },
+    { id: "e_3", t, type: "item_bought", run: "R", item: "x", price: 40 },
+    { id: "e_4", t, type: "purchase_undone", run: "R", item: "x" },
+    { id: "e_5", t, type: "character_changed", run: "R", look: "fancy" },
+    { id: "e_6", t, type: "character_changed", run: "R", look: { ...look, worn: [] } },
+    { id: "e_7", t, type: "character_changed", run: "R", look: { ...look, worn: { hat: { color: "red" } } } },
+    { id: "e_8", t, type: "item_bought", run: "R", item: "x", price: "40" },
+    { id: "e_9", t, type: "item_bought", run: "R", item: "x", price: -1 },
+    { id: "e_10", t, type: "character_created", run: "R", body: "male", look: { ...look, skin: 3 } },
+  ];
+  expect(parseLog(lines.map((l) => JSON.stringify(l)).join("\n")).map((e) => e.id)).toEqual(["e_1", "e_2", "e_3", "e_4"]);
+});
