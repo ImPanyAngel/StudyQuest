@@ -23,6 +23,11 @@ test("createRun derives id, trims, and rejects overlap", () => {
   expect(o.error).toEqual(expect.any(String));
 });
 
+test("addCourse refuses a folder with a forbidden character", () => {
+  const r = run([ev.created()], { type: "addCourse", run: R, code: "C2", name: "n", folder: "Courses/a?b/" }, min(1));
+  expect(r.error).toBe("A folder name can't contain ?.");
+});
+
 test("addCourse trims fields", () => {
   const r = run([ev.created()], { type: "addCourse", run: R, code: " DSAIT4000 ", name: " ML ", folder: " DSAIT4000/ " }, min(1));
   expect(r.events).toMatchObject([{ type: "course_added", course: "DSAIT4000", name: "ML", folder: "DSAIT4000/" }]);

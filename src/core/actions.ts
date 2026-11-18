@@ -1,6 +1,7 @@
 import { localDateOf, type LocalDate } from "./dates";
 import { evidenceOwner, examsDueForSat, runEnded, runProgress, runsDueToClose } from "./derive";
 import { BULK_KINDS, EVIDENCE_KINDS, KIND_NAMES, type IdFactory, type Kind, type QuestEvent } from "./events";
+import { folderError } from "./folders";
 import { TYPE_CODES, objectiveId, runIdFromName } from "./ids";
 import { tierFor } from "./prestige";
 import { applyEvent } from "./replay";
@@ -90,9 +91,12 @@ function draftsFor(s: State, a: Action, now: Date): Result<Draft[]> {
     }
     case "correctRunDates":
       return ok([{ type: "quarter_dates_corrected", run: a.run, start: a.start, end: a.end }]);
-    case "addCourse":
+    case "addCourse": {
       if (blocked(a.run)) return err(blocked(a.run)!);
+      const bad = folderError(a.folder);
+      if (bad) return err(bad);
       return ok([{ type: "course_added", run: a.run, course: a.code.trim(), name: a.name.trim(), folder: a.folder.trim() }]);
+    }
     case "undoCourse":
       return ok([{ type: "course_undone", run: a.run, course: a.code }]);
     case "addObjective": {
