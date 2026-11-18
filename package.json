@@ -1,6 +1,6 @@
 {
   "name": "studyquest",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Turns each university quarter into a game run.",
   "main": "main.js",
   "private": true,

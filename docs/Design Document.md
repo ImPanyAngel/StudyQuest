@@ -119,7 +119,7 @@ Rewards stay small, and every run is a **roguelike run**: XP, level, coins and e
 - **Levels.** Every run starts at level 1. Going from level L to L + 1 costs 50 + 10 × (L − 1) XP, so a quarter of about 1,200 XP (four courses with lectures, a few labs, assignments and exams) reaches about level 12.
 - **Badges within a run.** Course complete (every objective of a course done) and Lecture sweep (every lecture of a course done). Badges show as icons; hovering one shows its name. They hold while their condition does and end with the run.
 - **Permanent badges.** First prestige (first run closed), Tier 3 run (first close at Tier 3 or better) and Tier 5 run (first close at Tier 5). Each is credited to the run that earned it and shown on its Prestige Up screen.
-- **Character (5b).** Layered pixel sprites (base, hair, top, bottom, accessory, background), made fresh each run: free basics at creation, clothes bought with that run's coins, in-run badges unlocking special items for that run, and permanent badges unlocking items free in every later run. Art: a free sprite sheet (LPC-style, CC-BY / OGA-BY / CC-BY-SA / GPL / CC0) with a credits file.
+- **Character (5b).** Each run makes a fresh pixel character (LPC art, forward-facing 2-frame breathing idle, male or female body): skin, head, face, eyes and hair are free at creation and any time after; a plain starter outfit is free; everything else is bought with that run's coins from a shop whose shelves open by level (1, 4, 8, 11), and a bought item comes in every colour. Badge items are never sold: Lecture sweep's nerd glasses and Course complete's star amulet for that run, and First prestige's scarf, Tier 3's cape and Tier 5's crown free in every later run. The art (about 1 MB, with credits for every artist) is built into the plugin. Spec: `docs/superpowers/specs/2026-11-18-phase-5b-character-design.md`.
 - **Prestige snapshot.** Each prestige card keeps that run's character, so the Hall is a gallery of every character you've made.
 
 ## Screens and styling
@@ -133,7 +133,7 @@ Styling is unrestricted. Plugin views are plain HTML, CSS and canvas, so StudyQu
 | Course | One course's full objective list with marks, evidence links, completion % (opened from Home) |
 | Objective | Linked evidence, DONE / SAT / OPEN / STAIN mark |
 | Prestige hall | Past runs as cards: tier, %, level, stains, character snapshot; a run's page lists its badges |
-| Wardrobe and shop | Equip and buy cosmetics, see locked achievement items |
+| Character page | Opened from Home's character card: Wardrobe, Shop by level, Looks, art credits (creation page the first time) |
 
 There's also a ribbon icon, a status-bar badge (e.g. "Q2 64%") and command-palette commands.
 
@@ -155,7 +155,8 @@ All state is an append-only event log, one JSON object per line. Everything else
 | `objective_added` | An objective added in Setup |
 | `objective_undone` | Removal within the undo window only |
 | `objective_completed` | DONE (stored as silver), with the evidence file's path when one is needed, or sat |
-| `purchase` / `equip` | Shop and wardrobe actions |
+| `character_created` / `character_changed` | A run's character is made / its look is saved (body fixed) |
+| `item_bought` / `purchase_undone` | A shop purchase, with the price paid / undone within 30 minutes |
 
 Every event has a unique ID. Replay de-duplicates by ID and orders by time, as a safeguard against accidental duplicate lines.
 
@@ -169,7 +170,7 @@ Phases 1–2 make it usable for Q2 with manual objectives. Each later phase adds
 4. **File checks and one DONE mark.** Notebook and note rules on the picked file; silver and gold replaced by DONE. Spec: `docs/superpowers/specs/2026-11-17-phase-4-checks-design.md`.
 5. **Character and rewards**, in two parts:
    - **5a. XP, levels, coins and badges.** Spec: `docs/superpowers/specs/2026-11-18-phase-5a-xp-design.md`.
-   - **5b. Character, shop and wardrobe.** Waits for the sprite sheet; ships a credits file for CC-BY / OGA-BY / CC-BY-SA / GPL art.
+   - **5b. Character, shop and wardrobe.** Spec: `docs/superpowers/specs/2026-11-18-phase-5b-character-design.md`.
 
 Later, maybe: AI checks through a remote API or a homelab.
 
