@@ -1,10 +1,10 @@
-import { Notice, Plugin } from "obsidian";
+import { Notice, Plugin, TFile, TFolder, normalizePath } from "obsidian";
 import { nextLocalMidnight } from "./core/dates";
 import { unseenPrestige } from "./core/derive";
 import { CourseFolders } from "./store/course-folders";
 import { DayTicker, QuestStore } from "./store/quest-store";
 import { RunChoice } from "./store/run-choice";
-import { VaultLog } from "./store/vault-log";
+import { PluginLog } from "./store/plugin-log";
 import { StatusBadge } from "./ui/status-bar";
 import { StudyQuestView, VIEW_TYPE } from "./ui/view";
 
@@ -15,7 +15,8 @@ export default class StudyQuestPlugin extends Plugin {
   private dayTicker!: DayTicker;
 
   async onload() {
-    const log = new VaultLog(this.app.vault);
+    // The log lives in StudyQuest's own plugin folder: hidden from the explorer, search and graph.
+    const log = new PluginLog(this.app.vault.adapter, normalizePath(`${this.manifest.dir ?? `${this.app.vault.configDir}/plugins/${this.manifest.id}`}/log`));
     this.store = new QuestStore(log, () => new Date());
 
     const folders = new CourseFolders(this.app);
@@ -31,6 +32,7 @@ export default class StudyQuestPlugin extends Plugin {
 
     this.app.workspace.onLayoutReady(async () => {
       try {
+        await this.moveOldLog(log);
         await this.store.load();
         await this.store.runDailyCheck();
       } catch (e) {
@@ -38,14 +40,6 @@ export default class StudyQuestPlugin extends Plugin {
       }
       await this.revealPrestige();
 
-      let reload: number | undefined;
-      for (const ref of log.onChange(() => {
-        window.clearTimeout(reload);
-        reload = window.setTimeout(() => void this.store.load(), 250);
-      })) {
-        this.registerEvent(ref);
-      }
-      this.register(() => window.clearTimeout(reload));
 
       // Evidence links show whether their file still exists; redraw when files come and go.
       let redraw: number | undefined;
@@ -59,10 +53,27 @@ export default class StudyQuestPlugin extends Plugin {
       this.register(() => window.clearTimeout(redraw));
       this.scheduleMidnightCheck();
       // Timers don't run while the Mac sleeps, so also check for a new day when the window comes back.
-      this.registerDomEvent(window, "focus", () => this.dayTicker.check());
+      // Obsidian doesn't report changes to files in the plugin folder, so re-read the log when the
+      // window comes back (picks up what Sync brought in meanwhile), then check for a new day.
+      this.registerDomEvent(window, "focus", () => {
+        void this.store.load().catch(() => undefined);
+        this.dayTicker.check();
+      });
       this.registerDomEvent(document, "visibilitychange", () => this.dayTicker.check());
     });
     this.register(() => window.clearTimeout(this.midnightTimer));
+  }
+
+  /** Earlier versions kept the log in a visible `StudyQuest/log` folder: move it into the plugin folder, once. */
+  private async moveOldLog(log: PluginLog) {
+    const old = this.app.vault.getFolderByPath("StudyQuest/log");
+    if (!old) return;
+    const files = old.children.filter((f): f is TFile => f instanceof TFile && f.extension === "md");
+    for (const f of files) await log.importText(f.basename, await this.app.vault.read(f));
+    await this.app.fileManager.trashFile(old);
+    const parent = this.app.vault.getAbstractFileByPath("StudyQuest");
+    if (parent instanceof TFolder && parent.children.length === 0) await this.app.fileManager.trashFile(parent);
+    if (files.length) new Notice("StudyQuest moved its log into its plugin folder; the old StudyQuest folder is in the trash.");
   }
 
   /** Wakes just after local midnight to check for a new day. */

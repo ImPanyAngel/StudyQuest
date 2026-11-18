@@ -26,3 +26,6 @@ npm-debug.log*
 
 # Brainstorm mockups
 .superpowers/
+
+# The event log, when the plugin folder is the repo itself (dev symlink)
+/log/

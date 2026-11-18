@@ -86,20 +86,22 @@ StudyQuest is a community plugin written in TypeScript. It is desktop-only (`isD
 - **File picker.** Completing a lecture, assignment or lab opens a searchable list of vault files, most recently changed first. Picking one links it as the evidence; it's shown on the objective and opens on click.
 - **One file, one objective.** A file already used by another objective (in any run) is marked "used" and refused.
 - **File checks.** Notebooks and notes must pass the rules in File checks; other files (PDFs, images, slides) are accepted as they are.
-- **Course folders.** Each course has a vault folder (default `CODE/`), stored and shown in Setup; nothing else uses it yet.
+- **Course folders.** Each course gets its own vault folder, created when it's added (default `Courses/<CODE>/`); one folder per course, and a resit shares its old folder.
 
 **Vault layout**
 
 ```
-StudyQuest/
-  log/2026-27-Q2.md     ← append-only event log, one file per run
+Courses/<CODE>/                ← a folder per course, created when the course is added
 .obsidian/plugins/studyquest/
-  data.json             ← plugin settings only
+  log/2026-27-Q2.jsonl         ← append-only event log, one file per run (hidden from the vault)
+  data.json                    ← plugin settings only (the run the switch last picked)
 ```
+
+The log sits in StudyQuest's own plugin folder, so it never shows in the file explorer, search or the graph. Older versions kept it in a visible `StudyQuest/log/` folder; it is moved over once, on first start. Uninstalling the plugin deletes its folder, and the log with it, so back up `log/` first if you ever uninstall.
 
 **Devices**
 
-Everything runs on the Mac. The iPhone isn't a target. If the vault is synced to other devices the log is just a file there, but the plugin doesn't load on mobile.
+Everything runs on the Mac. The iPhone isn't a target. With Obsidian Sync, turn on the community-plugin options so the plugin folder (and with it the log) reaches other devices; the plugin doesn't load on mobile. StudyQuest re-reads the log whenever its window comes back into focus, to pick up synced changes.
 
 ## File checks
 

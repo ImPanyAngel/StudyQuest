@@ -22,11 +22,8 @@ export class EvidencePicker extends FuzzySuggestModal<TFile> {
 
   /** Called on every keystroke, so the sorted list is built once per opening. */
   getItems(): TFile[] {
-    // The plugin's own log folder is never evidence. Recently changed files first.
-    this.files ??= this.app.vault
-      .getFiles()
-      .filter((f) => !f.path.startsWith("StudyQuest/"))
-      .sort((a, b) => b.stat.mtime - a.stat.mtime);
+    // Recently changed files first. (The log lives in the plugin folder, outside the vault's files.)
+    this.files ??= this.app.vault.getFiles().sort((a, b) => b.stat.mtime - a.stat.mtime);
     return this.files;
   }
 
