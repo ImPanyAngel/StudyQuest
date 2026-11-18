@@ -52,16 +52,15 @@ export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, cl
   ring.createDiv({ cls: "sq-ring-label", text: run.name });
 
   const middle = top.createDiv({ cls: "sq-middle" });
-  // A run without exams (e.g. a career roadmap) has no exam week to show.
-  if (runHasExams(s, run.id)) {
-    const week = examWeek(run.end);
-    middle.createDiv({
-      cls: "sq-exam-week",
-      text: `${ended ? "Ended · " : ""}Exam week: ${formatShort(week.from)} → ${formatShort(week.to)}`,
-    });
-  } else if (ended) {
-    middle.createDiv({ cls: "sq-exam-week", text: `Ended ${formatShort(run.end)}` });
-  }
+  // A run without exams (e.g. a career roadmap) has no exam week to show. The line always
+  // keeps its space, so the course list starts at the same height whichever run is shown.
+  const week = examWeek(run.end);
+  const examLine = runHasExams(s, run.id)
+    ? `${ended ? "Ended · " : ""}Exam week: ${formatShort(week.from)} → ${formatShort(week.to)}`
+    : ended
+      ? `Ended ${formatShort(run.end)}`
+      : "\u00a0";
+  middle.createDiv({ cls: "sq-exam-week", text: examLine });
   const list = middle.createDiv({ cls: "sq-courses" });
   if (run.courses.size === 0) list.createDiv({ cls: "sq-muted", text: "No courses yet. Add them in Setup." });
   for (const c of run.courses.values()) {
