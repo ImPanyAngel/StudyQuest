@@ -2,6 +2,18 @@
   "name": "studyquest",
   "version": "0.6.0",
   "description": "Turns each university quarter into a game run.",
+  "author": "Panayiotis Angelides",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ImPanyAngel/StudyQuest.git"
+  },
+  "keywords": [
+    "obsidian",
+    "obsidian-plugin",
+    "gamification",
+    "study"
+  ],
   "main": "main.js",
   "private": true,
   "scripts": {

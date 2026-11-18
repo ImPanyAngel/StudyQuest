@@ -1,4 +1,4 @@
-# StudyQuest — Design Doc
+# StudyQuest: Design Doc
 
 Nov 14, 2026 · Panayiotis Angelides · updated Nov 18, 2026
 
