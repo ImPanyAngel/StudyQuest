@@ -6,7 +6,7 @@ import {
   canUndoCourse,
   canUndoObjective,
   courseObjectives,
-  currentRun,
+  chosenRun,
   objectiveLabel,
   isResit,
   runEnded,
@@ -19,6 +19,7 @@ import { courseFolder } from "../core/folders";
 import { runIdFromName } from "../core/ids";
 import type { CourseFolders } from "../store/course-folders";
 import type { QuestStore } from "../store/quest-store";
+import type { RunChoice } from "../store/run-choice";
 import { renderEvidence } from "./evidence-link";
 import { KIND_LABELS, renderMark, renderObjectiveMeta, renderTypeTag } from "./parts";
 import { singleFlight } from "./single-flight";
@@ -38,12 +39,13 @@ export function renderSetup(
   rerender: () => void,
   app: App,
   folders: CourseFolders,
+  choice: RunChoice,
 ): void {
   const s = store.state;
   const now = clock();
   const today = localDateOf(now);
 
-  if (!ui.run || (ui.run !== "new" && !s.runs.has(ui.run))) ui.run = currentRun(s, today)?.id ?? "new";
+  if (!ui.run || (ui.run !== "new" && !s.runs.has(ui.run))) ui.run = chosenRun(s, choice.get(), today)?.id ?? "new";
 
   const field = (parent: HTMLElement, key: string, attrs: { type?: string; placeholder?: string; value?: string }) => {
     const input = parent.createEl("input", { type: attrs.type ?? "text", cls: "sq-input" });
@@ -72,6 +74,9 @@ export function renderSetup(
   pick.onchange = () => {
     ui.run = pick.value;
     ui.course = undefined;
+    // Picking an open run moves the run switch too; a closed run is only viewed.
+    const picked = s.runs.get(pick.value);
+    if (picked && !picked.closed) choice.set(picked.id);
     rerender();
   };
 
@@ -83,7 +88,10 @@ export function renderSetup(
     button(row, "Create run", () => {
       const id = runIdFromName(name.value);
       return act({ type: "createRun", name: name.value, start: ui.drafts["run.start"] ?? "", end: ui.drafts["run.end"] ?? "" }, () => {
-        if (id.ok) ui.run = id.value;
+        if (id.ok) {
+          ui.run = id.value;
+          choice.set(id.value);
+        }
         clear("run.name", "run.start", "run.end");
       });
     });

@@ -35,6 +35,7 @@
 .studyquest .sq-tab { padding: 6px 14px; font-size: 12px; color: var(--sq-muted); cursor: pointer; border: 1px solid transparent; border-bottom: none; border-radius: 4px 4px 0 0; }
 .studyquest .sq-tab:hover { color: var(--sq-fg); }
 .studyquest .sq-tab.is-active { color: var(--sq-fg); border-color: var(--sq-line); background: var(--sq-hover); }
+.studyquest .sq-run-switch { margin-left: auto; align-self: center; margin-bottom: 4px; font-size: 12px; }
 
 .studyquest .sq-muted { color: var(--sq-muted); font-size: 13px; padding: 6px 0; }
 .studyquest .sq-empty { padding: 40px 0; text-align: center; }

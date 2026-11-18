@@ -1,15 +1,27 @@
 import type { App } from "obsidian";
 import { examWeek, formatShort, localDateOf, type Clock } from "../core/dates";
-import { courseProgress, currentRun, homeRows, isResit, objectiveLabel, runEnded, runProgress, runScore, type HomeRow } from "../core/derive";
+import {
+  chosenRun,
+  courseProgress,
+  homeRows,
+  isResit,
+  objectiveLabel,
+  runEnded,
+  runHasExams,
+  runProgress,
+  runScore,
+  type HomeRow,
+} from "../core/derive";
 import { tierLabel } from "../core/prestige";
 import type { QuestStore } from "../store/quest-store";
+import type { RunChoice } from "../store/run-choice";
 import { openCompleteMenu } from "./complete-menu";
 import { renderObjectiveMeta, renderSprite, renderTypeTag, type Navigate } from "./parts";
 
-export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, clock: Clock, app: App): void {
+export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, clock: Clock, app: App, choice: RunChoice): void {
   const s = store.state;
   const today = localDateOf(clock());
-  const run = currentRun(s, today);
+  const run = chosenRun(s, choice.get(), today);
 
   if (!run) {
     const empty = el.createDiv({ cls: "sq-empty" });
@@ -40,11 +52,16 @@ export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, cl
   ring.createDiv({ cls: "sq-ring-label", text: run.name });
 
   const middle = top.createDiv({ cls: "sq-middle" });
-  const week = examWeek(run.end);
-  middle.createDiv({
-    cls: "sq-exam-week",
-    text: `${ended ? "Ended · " : ""}Exam week: ${formatShort(week.from)} → ${formatShort(week.to)}`,
-  });
+  // A run without exams (e.g. a career roadmap) has no exam week to show.
+  if (runHasExams(s, run.id)) {
+    const week = examWeek(run.end);
+    middle.createDiv({
+      cls: "sq-exam-week",
+      text: `${ended ? "Ended · " : ""}Exam week: ${formatShort(week.from)} → ${formatShort(week.to)}`,
+    });
+  } else if (ended) {
+    middle.createDiv({ cls: "sq-exam-week", text: `Ended ${formatShort(run.end)}` });
+  }
   const list = middle.createDiv({ cls: "sq-courses" });
   if (run.courses.size === 0) list.createDiv({ cls: "sq-muted", text: "No courses yet. Add them in Setup." });
   for (const c of run.courses.values()) {

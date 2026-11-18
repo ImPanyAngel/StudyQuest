@@ -3,6 +3,7 @@ import { nextLocalMidnight } from "./core/dates";
 import { unseenPrestige } from "./core/derive";
 import { CourseFolders } from "./store/course-folders";
 import { DayTicker, QuestStore } from "./store/quest-store";
+import { RunChoice } from "./store/run-choice";
 import { VaultLog } from "./store/vault-log";
 import { StatusBadge } from "./ui/status-bar";
 import { StudyQuestView, VIEW_TYPE } from "./ui/view";
@@ -18,10 +19,13 @@ export default class StudyQuestPlugin extends Plugin {
     this.store = new QuestStore(log, () => new Date());
 
     const folders = new CourseFolders(this.app);
-    this.registerView(VIEW_TYPE, (leaf) => new StudyQuestView(leaf, this.store, folders));
+    // Plugin settings: only the run the switch last picked.
+    const data = ((await this.loadData()) ?? {}) as { run?: string };
+    const choice = new RunChoice(data.run, (run) => void this.saveData({ ...data, run }));
+    this.registerView(VIEW_TYPE, (leaf) => new StudyQuestView(leaf, this.store, folders, choice));
     this.addRibbonIcon("trophy", "Open StudyQuest", () => void this.openHome());
     this.addCommand({ id: "open-studyquest", name: "Open StudyQuest", callback: () => void this.openHome() });
-    this.badge = new StatusBadge(this.addStatusBarItem(), this.store, this.store.clock, () => void this.openHome());
+    this.badge = new StatusBadge(this.addStatusBarItem(), this.store, choice, this.store.clock, () => void this.openHome());
 
     this.dayTicker = new DayTicker(this.store.clock, () => void this.onNewDay());
 
