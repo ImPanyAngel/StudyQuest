@@ -21,7 +21,7 @@ export interface SpriteItem {
   recolor?: { material: string }[];
   /** Pre-coloured items: the variant names. */
   variants?: string[];
-  /** "<variant><head kind>|<layer n>|<body>" → the reference frame key and its colour swaps. */
+  /** "<variant><head kind>|<layer index>|<body>" → the reference frame key and its colour swaps. */
   colorMaps?: Record<string, { ref: string; map: [string, string][] }>;
   /** Items whose image depends on the head (faces): the head kinds available. */
   headKinds?: string[];

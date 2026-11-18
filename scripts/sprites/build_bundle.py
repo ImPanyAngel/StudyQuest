@@ -147,7 +147,7 @@ def main(src, out):
                             if cm is None:
                                 got[name + suffix] = place(vim)
                             else:
-                                maps.setdefault("%s%s|%d|%s" % (name, suffix, n, body), {"ref": ref[0] + suffix, "map": cm})
+                                maps.setdefault("%s%s|%d|%s" % (name, suffix, len(layers), body), {"ref": ref[0] + suffix, "map": cm})
                         if not variants and im is not None:
                             got[suffix] = place(im)
                     if got:
