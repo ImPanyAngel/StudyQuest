@@ -1,15 +1,17 @@
 import { Notice, type App } from "obsidian";
 import { item, shopItems, slotOf, type ShopItem } from "../core/catalog";
 import { drawnFilter, wearable, type Look } from "../core/character";
-import { undoDeadline } from "../core/derive";
+import { localDateOf } from "../core/dates";
+import { runEnded } from "../core/derive";
 import { runRewards } from "../core/rewards";
 import type { Action } from "../core/actions";
 import type { QuestStore } from "../store/quest-store";
+import { confirm } from "./confirm-modal";
 import { CreditsModal } from "./credits-modal";
 import type { CharacterUi } from "./creation";
-import { colourControls, cycler, draftFor, looksRows, row, slotName, type Draft } from "./look-editor";
+import { colourControls, cycler, draftFor, looksRows, row, sameLook, slotName, type Draft } from "./look-editor";
 import { renderLevel, type Navigate, type Route } from "./parts";
-import { renderCharacter } from "./sprite";
+import { renderCharacter, renderStill } from "./sprite";
 
 const SHELVES: { level: number; label: string }[] = [
   { level: 1, label: "basics" },
@@ -41,11 +43,12 @@ export function renderCharacterPage(
     nav({ tab: "creation", run: run.id });
     return;
   }
-  const frozen = !!run.closed;
+  // Closed or past its end date: the character is final, so everything is read-only.
+  const frozen = !!run.closed || runEnded(run, localDateOf(store.clock()));
   // Edits stay a draft until Save; a fresh copy whenever the saved look changes underneath
   // (an undone purchase, a log reloaded from another device).
   const draft = (ui.draft = draftFor(ui.draft, run.id, c.body, c.look));
-  const dirty = JSON.stringify(draft.look) !== JSON.stringify(c.look);
+  const dirty = !sameLook(draft.look, c.look);
   const rewards = runRewards(s, run.id);
   const act = async (a: Action) => {
     const r = await store.dispatch(a);
@@ -55,7 +58,7 @@ export function renderCharacterPage(
 
   const page = el.createDiv({ cls: "sq-char-page" });
   const stage = page.createDiv({ cls: "sq-char-stage" });
-  renderCharacter(stage, draft, drawnFilter(s, run.id), 3);
+  renderCharacter(stage, frozen ? c : draft, drawnFilter(s, run.id), 3);
   renderLevel(stage, rewards);
   stage.createEl("a", { cls: "sq-credits-link", text: "Art credits" }).onClickEvent(() => new CreditsModal(app).open());
 
@@ -65,7 +68,9 @@ export function renderCharacterPage(
   for (const [id, label] of [["wardrobe", "Wardrobe"], ["shop", "Shop"], ["looks", "Looks (free)"]] as const) {
     subs.createSpan({ cls: id === sub ? "sq-subtab is-on" : "sq-subtab", text: label }).onClickEvent(() => ((ui.sub = id), rerender()));
   }
-  if (frozen) main.createDiv({ cls: "sq-hint", text: "This run is closed. Its character is final." });
+  if (frozen) main.createDiv({ cls: "sq-hint", text: `This run has ${run.closed ? "closed" : "ended"}. Its character is final.` });
+  // Read-only controls on a finished run: shown, but not clickable.
+  const controls = frozen ? main.createDiv({ cls: "sq-readonly" }) : main;
 
   const saveBar = () => {
     if (frozen) return;
@@ -80,14 +85,15 @@ export function renderCharacterPage(
     reset.onClickEvent(() => ((ui.draft = undefined), rerender()));
   };
 
+  const shown = frozen ? { run: run.id, body: c.body, look: structuredClone(c.look) } : draft;
   if (sub === "looks") {
-    looksRows(main, draft, rerender);
+    looksRows(controls, shown, rerender);
     saveBar();
   } else if (sub === "wardrobe") {
-    renderWardrobe(main, draft, wearable(s, run.id, c.body), c.look, rerender);
+    renderWardrobe(controls, shown, wearable(s, run.id, c.body), c.look, rerender);
     saveBar();
   } else {
-    renderShop(main, store, run.id, c.body, rewards.level.level, rewards.coins, frozen, act);
+    renderShop(controls, store, run.id, c.body, rewards.level.level, rewards.coins, frozen, act, app);
   }
 }
 
@@ -130,42 +136,45 @@ function renderShop(
   coins: number,
   frozen: boolean,
   act: (a: Action) => Promise<boolean>,
+  app: App,
 ): void {
   const owned = store.state.runs.get(run)!.purchases;
-  const now = store.clock();
   const all = shopItems(body);
   for (const shelf of SHELVES) {
     const locked = level < shelf.level;
     const box = el.createDiv({ cls: locked ? "sq-shelf is-locked" : "sq-shelf" });
     box.createEl("h4", { cls: "sq-section", text: `Level ${shelf.level} · ${shelf.label}${locked ? " 🔒" : ""}` });
     const grid = box.createDiv({ cls: "sq-shop-grid" });
-    for (const it of all.filter((i) => i.level === shelf.level)) renderShopItem(grid, it, owned.get(it.id), locked || frozen, coins, now, run, body, act);
+    for (const it of all.filter((i) => i.level === shelf.level)) renderShopItem(grid, it, owned.has(it.id), locked || frozen, coins, run, body, act, app);
   }
 }
 
 function renderShopItem(
   grid: HTMLElement,
   it: ShopItem,
-  bought: { price: number; at: string } | undefined,
+  owned: boolean,
   locked: boolean,
   coins: number,
-  now: Date,
   run: string,
   body: Draft["body"],
   act: (a: Action) => Promise<boolean>,
+  app: App,
 ): void {
   const card = grid.createDiv({ cls: "sq-shop-item" });
-  // The item on its own (body, head and face filtered out), default colour.
+  // The item on its own (body, head and face filtered out), default colour, as a still picture.
   const look: Look = { skin: "light", head: "", face: "", worn: { [slotOf(it)]: { item: it.id, ...(it.variants && !it.recolor ? { color: it.variants[0] } : {}) } } };
-  renderCharacter(card.createDiv({ cls: "sq-shop-thumb" }), { body, look }, (id) => id === it.id, 1);
+  renderStill(card.createDiv({ cls: "sq-shop-thumb" }), { body, look }, (id) => id === it.id, 1);
   card.createDiv({ cls: "sq-shop-name", text: it.name });
-  if (bought) {
+  if (owned) {
     card.createDiv({ cls: "sq-owned", text: "owned" });
-    const left = Math.ceil((undoDeadline(bought.at).getTime() - now.getTime()) / 60_000);
-    if (left > 0 && !locked) card.createEl("button", { cls: "sq-chip", text: `Undo · ${left} min` }).onClickEvent(() => void act({ type: "undoPurchase", run, item: it.id }));
     return;
   }
   const buy = card.createEl("button", { cls: "sq-price", text: `${it.price}` });
   buy.disabled = locked || coins < it.price;
-  buy.onClickEvent(() => void act({ type: "buyItem", run, item: it.id }));
+  buy.onClickEvent(async () => {
+    // Purchases are final, so ask first.
+    if (await confirm(app, "Buy item", `Buy ${it.name} for ${it.price} coins? Purchases can't be undone.`, "Buy")) {
+      await act({ type: "buyItem", run, item: it.id });
+    }
+  });
 }

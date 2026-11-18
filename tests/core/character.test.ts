@@ -125,3 +125,10 @@ test("creating a character: once, with a valid starter look; refused on an ended
   const ended = planAction(replay(h), { type: "createCharacter", run: R, body: "male", look: defaultLook("male") }, new Date("2027-02-05T12:00:00Z"), ids);
   expect(ended).toMatchObject({ ok: false });
 });
+
+test("planned events hold their own copy of the look, not the caller's object", () => {
+  const look = structuredClone(LOOK);
+  const r = plan(run(0), { type: "changeLook", run: R, look });
+  look.skin = "olive";
+  expect(r.ok && (r.value[0] as { look: typeof LOOK }).look.skin).toBe("light");
+});

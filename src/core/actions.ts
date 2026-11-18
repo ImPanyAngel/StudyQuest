@@ -192,14 +192,14 @@ function draftsFor(s: State, a: Action, now: Date): Result<Draft[]> {
       if (blocked(a.run)) return err(blocked(a.run)!);
       if (s.runs.get(a.run)?.character) return err("This run already has a character.");
       const bad = checkLook(s, a.run, a.body, a.look);
-      return bad ? err(bad) : ok([{ type: "character_created", run: a.run, body: a.body, look: a.look }]);
+      return bad ? err(bad) : ok([{ type: "character_created", run: a.run, body: a.body, look: structuredClone(a.look) }]);
     }
     case "changeLook": {
       if (blocked(a.run)) return err(blocked(a.run)!);
       const c = s.runs.get(a.run)?.character;
       if (!c) return err("Make this run's character first.");
       const bad = checkLook(s, a.run, c.body, a.look, c.look);
-      return bad ? err(bad) : ok([{ type: "character_changed", run: a.run, look: a.look }]);
+      return bad ? err(bad) : ok([{ type: "character_changed", run: a.run, look: structuredClone(a.look) }]);
     }
     case "buyItem": {
       if (blocked(a.run)) return err(blocked(a.run)!);

@@ -203,3 +203,4 @@
 .studyquest .sq-price { font-size: 11px; color: var(--sq-gold); padding: 1px 10px; }
 .studyquest .sq-owned { font-size: 10px; color: var(--sq-accent); }
 .sq-credits pre { white-space: pre-wrap; font-size: 11px; max-height: 60vh; overflow: auto; }
+.studyquest .sq-readonly { pointer-events: none; opacity: 0.6; display: flex; flex-direction: column; gap: 8px; }

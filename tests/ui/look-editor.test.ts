@@ -1,5 +1,5 @@
 import { defaultLook } from "../../src/core/character";
-import { draftFor } from "../../src/ui/look-editor";
+import { draftFor, sameLook } from "../../src/ui/look-editor";
 
 const saved = defaultLook("male");
 
@@ -21,4 +21,13 @@ test("the draft is a copy: editing it never touches the saved look", () => {
   const d = draftFor(undefined, "R", "male", saved);
   d.look.worn.legs = { item: "legs/shorts/legs_shorts", color: "red" };
   expect(saved.worn.legs.item).toBe("legs/pants/legs_pants");
+});
+
+test("sameLook ignores the order slots were added in", () => {
+  const a = defaultLook("male");
+  const { hair, ...rest } = a.worn;
+  const b = { ...a, worn: { ...rest, hair } };
+  expect(JSON.stringify(a)).not.toBe(JSON.stringify(b));
+  expect(sameLook(a, b)).toBe(true);
+  expect(sameLook(a, { ...a, skin: "olive" })).toBe(false);
 });

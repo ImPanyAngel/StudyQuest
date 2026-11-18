@@ -238,3 +238,9 @@ Update `docs/Design Document.md`:
   - Recorded purchases and looks are trusted on replay, and `item_bought` stores its price ("History is permanent").
   - Badge items are made available, never put on automatically.
   - A lapsed in-run badge item survives a save when it's carried over unchanged.
+
+## Changed after review (Nov 18, 2026, by the user)
+
+- Buying asks for confirmation ("Buy X for N coins? Purchases can't be undone."), and the Shop has no undo button. `purchase_undone` stays in the log format and replay, so it can return later, but the UI no longer writes it.
+- Shop thumbnails are still pictures, kept in the sprite cache.
+- On an ended or closed run, the character page is read-only and shows the saved look, and creation is refused with a message.

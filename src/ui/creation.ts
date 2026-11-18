@@ -1,5 +1,7 @@
 import { Notice } from "obsidian";
 import { defaultLook } from "../core/character";
+import { localDateOf } from "../core/dates";
+import { runEnded } from "../core/derive";
 import type { QuestStore } from "../store/quest-store";
 import { looksRows, row, starterRows, type Draft } from "./look-editor";
 import type { Navigate, Route } from "./parts";
@@ -21,6 +23,10 @@ export function renderCreation(el: HTMLElement, store: QuestStore, route: Extrac
   }
   if (run.character) {
     nav({ tab: "character", run: run.id });
+    return;
+  }
+  if (run.closed || runEnded(run, localDateOf(store.clock()))) {
+    el.createDiv({ cls: "sq-muted", text: `${run.name} has ${run.closed ? "closed" : "ended"}, so it can't get a character any more.` });
     return;
   }
   if (ui.draft?.run !== run.id) ui.draft = { run: run.id, body: "male", look: defaultLook("male") };

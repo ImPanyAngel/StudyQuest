@@ -20,9 +20,9 @@ function loadAtlas(): Promise<HTMLImageElement> {
   return atlas;
 }
 
-/** Composited 128×64 frame pairs, by look. Looks change rarely; the cache stays small. */
+/** Composited 128×64 frame pairs, by look: big enough for every shop thumbnail plus the characters on screen. */
 const cache = new Map<string, Promise<HTMLCanvasElement>>();
-const CACHE_MAX = 64;
+const CACHE_MAX = 512;
 
 /** Draws a look's two breathing frames onto one 128×64 canvas: atlas pieces, recoloured, back to front. */
 export function compose(look: Look, body: Body, visible: (itemId: string) => boolean): Promise<HTMLCanvasElement> {
@@ -56,6 +56,19 @@ export function compose(look: Look, body: Body, visible: (itemId: string) => boo
     cache.set(key, hit);
   }
   return hit;
+}
+
+/** One still frame, drawn once: shop thumbnails, where ~190 breathing loops would be wasted. */
+export function renderStill(parent: HTMLElement, shown: Shown, visible: (itemId: string) => boolean, scale: number): void {
+  const canvas = parent.createEl("canvas", { cls: "sq-character" });
+  canvas.width = FRAME * scale;
+  canvas.height = FRAME * scale;
+  const ctx = canvas.getContext("2d")!;
+  ctx.imageSmoothingEnabled = false;
+  void compose(shown.look, shown.body, visible).then(
+    (frames) => ctx.drawImage(frames, 0, 0, FRAME, FRAME, 0, 0, canvas.width, canvas.height),
+    () => canvas.remove(),
+  );
 }
 
 export interface Shown {

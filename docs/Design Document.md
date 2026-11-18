@@ -156,7 +156,7 @@ All state is an append-only event log, one JSON object per line. Everything else
 | `objective_undone` | Removal within the undo window only |
 | `objective_completed` | DONE (stored as silver), with the evidence file's path when one is needed, or sat |
 | `character_created` / `character_changed` | A run's character is made / its look is saved (body fixed) |
-| `item_bought` / `purchase_undone` | A shop purchase, with the price paid / undone within 30 minutes |
+| `item_bought` / `purchase_undone` | A shop purchase, with the price paid (confirmed first; purchases are final) / an undo, kept in the format but not offered in the UI |
 
 Every event has a unique ID. Replay de-duplicates by ID and orders by time, as a safeguard against accidental duplicate lines.
 

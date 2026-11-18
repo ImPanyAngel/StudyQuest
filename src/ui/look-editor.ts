@@ -10,6 +10,12 @@ export interface Draft {
   base?: string;
 }
 
+/** Same look, whatever order its slots were added in. */
+export function sameLook(a: Look, b: Look): boolean {
+  const canon = (l: Look) => JSON.stringify({ ...l, worn: Object.fromEntries(Object.entries(l.worn).sort(([x], [y]) => x.localeCompare(y))) });
+  return canon(a) === canon(b);
+}
+
 /** The draft to edit: the current one while it's still based on this saved look, run and body, else a fresh copy. */
 export function draftFor(current: Draft | undefined, run: string, body: Body, saved: Look): Draft {
   const base = JSON.stringify(saved);

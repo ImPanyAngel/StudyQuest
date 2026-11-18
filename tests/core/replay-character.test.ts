@@ -53,3 +53,9 @@ test("overlapping runs keep separate characters and purchases", () => {
   expect(s.runs.get("Career")!.character!.body).toBe("female");
   expect(s.runs.get("Career")!.purchases.size).toBe(0);
 });
+
+test("a purchase can't be undone once its run is closed", () => {
+  const old = ev.created("Old", "2026-10-01", "2026-10-15", at(0));
+  const s = replay([old, ev.character("Old", "male", LOOK, at(1)), ev.bought("Old", HAT, 120, at(2)), ev.closed("Old", 0, 0, 0, at(3)), ev.purchaseUndone("Old", HAT, at(4))]);
+  expect(s.runs.get("Old")!.purchases.has(HAT)).toBe(true);
+});
