@@ -21,10 +21,10 @@ When a course is added in Setup, its folder should actually exist in the vault s
 
 ## Claude's calls
 
-- A folder typed in Setup is a full vault path, as today; only the default changed. Missing parent folders are created too.
+- A folder typed in Setup goes inside `Courses/` (typing `DSAIT4005` gives `Courses/DSAIT4005/`, and a typed `Courses/` prefix isn't doubled). Missing parent folders are created too. (First built as a full vault path; the user's check showed that was wrong.)
 - Undo removes the folder only if StudyQuest created it during this Obsidian session and it's still empty, so a folder you made yourself is never removed. Removal goes through Obsidian's trash setting (`fileManager.trashFile`).
 - Planning refuses a folder path that is empty, has a `.` or `..` part, or contains `\ : * ? " < > |`, with a clear message. Replay doesn't check folders, so old logs replay unchanged.
-- The folder is stored as typed (trimmed), the same as today.
+- The log stores the resolved path (e.g. `Courses/DSAIT4005/`), which is what Setup shows.
 
 ## Non-goals
 

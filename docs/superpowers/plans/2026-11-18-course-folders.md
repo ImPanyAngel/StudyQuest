@@ -34,7 +34,7 @@
 - Test: `tests/core/folders.test.ts`, plus one test in `tests/core/actions.test.ts`.
 
 **Interfaces:**
-- `defaultCourseFolder(code: string): string` returns `` `Courses/${code}/` ``.
+- `courseFolder(typed: string, code: string): string` returns `Courses/<typed or CODE>/` (amended after the user's check: typed folders go inside `Courses/`).
 - `folderChain(path: string): string[]` returns the normalised path and its parents, outermost first. For example, `"Courses/DSAIT4010/"` gives `["Courses", "Courses/DSAIT4010"]`. To normalise: split on `/`, trim each part, and drop empty parts.
 - `folderError(path: string): string | null` returns:
   - `"A course folder needs a name."` when the path is empty after normalising;
@@ -42,7 +42,7 @@
   - `` `A folder name can't contain ${ch}.` `` for the first forbidden character found.
 
 - [ ] **Step 1: Write failing tests.**
-  - `defaultCourseFolder("DSAIT4010")` returns `"Courses/DSAIT4010/"`.
+  - `courseFolder("", "DSAIT4010")` returns `"Courses/DSAIT4010/"`; `courseFolder("DSAIT4005", "TEST")` returns `"Courses/DSAIT4005/"`.
   - `folderChain` returns `["Courses", "Courses/X"]` for each of `"Courses/X/"`, `"/Courses//X/ "` and `" Courses / X "`. For `"A"` it returns `["A"]`.
   - `folderError` returns null for `"Courses/X/"`. It returns the messages above for `"/"`, `"Courses/../X"`, `"Courses/./X"` and `"Courses/X:Y"`.
   - In `actions.test.ts`: `addCourse` with folder `"Courses/a?b/"` is refused with ``"A folder name can't contain ?."``.
@@ -58,7 +58,7 @@
 - Modify: `src/main.ts`, `src/ui/view.ts`, `src/ui/setup.ts`.
 
 **Interfaces:**
-- Consumes `folderChain` and `defaultCourseFolder` from Task 1.
+- Consumes `folderChain` and `courseFolder` from Task 1.
 - `class CourseFolders { constructor(app: App) }` provides:
   - `ensure(path: string): Promise<void>`. For each path in `folderChain(path)`: if nothing exists there, call `vault.createFolder` and record the path in a private `created: Set<string>`. If a file exists there instead, throw `` `"${p}" is a file, not a folder.` ``. An existing folder is used as it is.
   - `removeIfEmpty(path: string): Promise<void>`. Take the last entry of `folderChain(path)`. If it's in `created`, is a `TFolder` with `children.length === 0`, then call `app.fileManager.trashFile(folder)` and remove it from `created`. Otherwise do nothing.

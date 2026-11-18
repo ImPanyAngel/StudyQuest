@@ -15,7 +15,7 @@ import {
 } from "../core/derive";
 import { tierLabel } from "../core/prestige";
 import { ADDABLE_KINDS, BULK_KINDS, DATED_KINDS, type Kind } from "../core/events";
-import { defaultCourseFolder } from "../core/folders";
+import { courseFolder } from "../core/folders";
 import { runIdFromName } from "../core/ids";
 import type { CourseFolders } from "../store/course-folders";
 import type { QuestStore } from "../store/quest-store";
@@ -144,10 +144,10 @@ export function renderSetup(
     const row = s2.createDiv({ cls: "sq-form" });
     const code = field(row, "course.code", { placeholder: "Code, e.g. DSAIT4000" });
     field(row, "course.name", { placeholder: "Name" });
-    field(row, "course.folder", { placeholder: "Vault folder (default: Courses/CODE/)" });
+    field(row, "course.folder", { placeholder: "Folder in Courses/ (default: CODE)" });
     button(row, "Add course", () => {
       const c = code.value.trim();
-      const folder = ui.drafts["course.folder"]?.trim() || defaultCourseFolder(c);
+      const folder = courseFolder(ui.drafts["course.folder"] ?? "", c);
       return act(
         {
           type: "addCourse",

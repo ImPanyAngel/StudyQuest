@@ -1,7 +1,15 @@
-import { defaultCourseFolder, folderChain, folderError } from "../../src/core/folders";
+import { courseFolder, folderChain, folderError } from "../../src/core/folders";
 
-test("the default course folder sits under Courses/", () => {
-  expect(defaultCourseFolder("DSAIT4010")).toBe("Courses/DSAIT4010/");
+test("an empty folder field gives Courses/<CODE>/", () => {
+  expect(courseFolder("", "DSAIT4010")).toBe("Courses/DSAIT4010/");
+  expect(courseFolder("   ", "DSAIT4010")).toBe("Courses/DSAIT4010/");
+});
+
+test("a typed folder goes inside Courses/, without doubling it", () => {
+  expect(courseFolder("DSAIT4005", "TEST")).toBe("Courses/DSAIT4005/");
+  expect(courseFolder("Year 1/Career", "CV")).toBe("Courses/Year 1/Career/");
+  expect(courseFolder("Courses/DSAIT4005/", "TEST")).toBe("Courses/DSAIT4005/");
+  expect(courseFolder("/courses/X", "TEST")).toBe("Courses/X/");
 });
 
 test("folderChain normalises slashes and spaces and lists parents first", () => {

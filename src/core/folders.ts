@@ -2,8 +2,13 @@
 
 const FORBIDDEN = ["\\", ":", "*", "?", '"', "<", ">", "|"];
 
-export function defaultCourseFolder(code: string): string {
-  return `Courses/${code}/`;
+const ROOT = "Courses";
+
+/** Where a course's folder goes: always inside Courses/. An empty field gives Courses/<CODE>/; a typed "Courses/" prefix isn't doubled. */
+export function courseFolder(typed: string, code: string): string {
+  const parts = folderChain(typed).at(-1)?.split("/") ?? [];
+  if (parts[0]?.toLowerCase() === ROOT.toLowerCase()) parts.shift();
+  return `${[ROOT, ...(parts.length ? parts : [code.trim()])].join("/")}/`;
 }
 
 /** The normalised path and each of its parents, outermost first: "Courses/X/" → ["Courses", "Courses/X"]. */
