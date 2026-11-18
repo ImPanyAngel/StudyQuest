@@ -1,5 +1,5 @@
 import { replay } from "../../src/core/replay";
-import { levelFor, objectiveXp, runRewards } from "../../src/core/rewards";
+import { badgesEarnedBy, levelFor, objectiveXp, permanentBadges, runBadges, runRewards } from "../../src/core/rewards";
 import { Q2, at, ev } from "./fixtures";
 
 const R = Q2.run;
@@ -77,5 +77,52 @@ describe("runRewards", () => {
     const l2 = ev.objective("Old", "C1", "lecture", 2, at(2));
     const s = replay([old, ev.course("Old", "C1", at(1)), l1, l2, ev.completed(l1.obj, "silver", at(3), "X.md"), ev.closed("Old", 1, 2, 0, at(4))]);
     expect(runRewards(s, "Old").xp).toBe(10);
+  });
+});
+
+describe("in-run badges", () => {
+  const ids = (s: ReturnType<typeof replay>) => runBadges(s, R).map((b) => `${b.id}:${b.course}`);
+
+  test("Course complete holds while every objective is done, and lapses when one is added", () => {
+    const l = ev.objective(R, "C1", "lecture", 1);
+    const done = [...start(), l, ev.completed(l.obj, "silver", at(3), "L.md")];
+    expect(ids(replay(done))).toEqual(["course-complete:C1", "lecture-sweep:C1"]);
+    expect(runBadges(replay(done), R)[0].name).toBe("Course complete");
+    expect(ids(replay([...done, ev.objective(R, "C1", "lab", 1, at(4))]))).toEqual(["lecture-sweep:C1"]);
+  });
+
+  test("Lecture sweep needs every lecture done, not the whole course", () => {
+    const l = ev.objective(R, "C1", "lecture", 1);
+    const a = ev.objective(R, "C1", "assignment", 1, at(2), { date: "2026-12-01" });
+    expect(ids(replay([...start(), l, a, ev.completed(l.obj, "silver", at(3), "L.md")]))).toEqual(["lecture-sweep:C1"]);
+  });
+
+  test("a course without lectures never sweeps; an empty course earns nothing", () => {
+    const a = ev.objective(R, "C1", "assignment", 1, at(2), { date: "2026-12-01" });
+    expect(ids(replay([...start(), a, ev.completed(a.obj, "silver", at(3), "A.md")]))).toEqual(["course-complete:C1"]);
+    expect(ids(replay(start()))).toEqual([]);
+  });
+});
+
+describe("permanent badges", () => {
+  // Two runs that ended in the autumn, closed on Nov 16.
+  const A = ev.created("A", "2026-09-01", "2026-09-20", at(-200));
+  const B = ev.created("B", "2026-10-01", "2026-10-20", at(-199));
+
+  test("each goes to the first qualifying close and is credited to that run", () => {
+    const s = replay([A, B, ev.closed("A", 3, 4, 1, at(3)), ev.closed("B", 1, 1, 5, at(4))]);
+    expect(permanentBadges(s).map((b) => `${b.id}:${b.run}`)).toEqual(["first-prestige:A", "tier-3:B", "tier-5:B"]);
+    expect(badgesEarnedBy(s, "B").map((b) => b.name)).toEqual(["Tier 3 run", "Tier 5 run"]);
+    expect(badgesEarnedBy(s, "A").map((b) => b.name)).toEqual(["First prestige"]);
+  });
+
+  test("closes at the same moment go by run id", () => {
+    const s = replay([B, A, ev.closed("B", 1, 1, 5, at(5)), ev.closed("A", 1, 1, 5, at(5))]);
+    expect(permanentBadges(s).map((b) => b.run)).toEqual(["A", "A", "A"]);
+  });
+
+  test("none before any close; an Unranked close still earns First prestige", () => {
+    expect(permanentBadges(replay([A]))).toEqual([]);
+    expect(permanentBadges(replay([A, ev.closed("A", 0, 1, 0, at(3))])).map((b) => b.id)).toEqual(["first-prestige"]);
   });
 });
