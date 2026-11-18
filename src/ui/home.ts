@@ -52,7 +52,7 @@ export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, cl
 
   const pct = runProgress(s, run.id).pct;
   const ring = top.createDiv({ cls: "sq-ring" });
-  ring.style.setProperty("--sq-pct", String(pct ?? 0));
+  ring.setCssProps({ "--sq-pct": String(pct ?? 0) });
   ring.createDiv({ cls: "sq-ring-value", text: pct === null ? "—" : `${pct}%` });
   ring.createDiv({ cls: "sq-ring-label", text: run.name });
 
@@ -75,7 +75,7 @@ export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, cl
     row.createSpan({ cls: "sq-name", text: c.name });
     if (isResit(s, run.id, c.code)) row.createSpan({ cls: "sq-pill", text: "RESIT" });
     const bar = row.createSpan({ cls: "sq-bar" });
-    bar.createSpan({ cls: "sq-bar-fill" }).style.width = `${p.pct ?? 0}%`;
+    bar.createSpan({ cls: "sq-bar-fill" }).setCssStyles({ width: `${p.pct ?? 0}%` });
     row.createSpan({ cls: "sq-pct", text: p.pct === null ? "—" : `${p.pct}%` });
     row.onClickEvent(() => nav({ tab: "course", run: run.id, course: c.code }));
   }

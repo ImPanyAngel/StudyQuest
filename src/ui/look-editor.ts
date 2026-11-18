@@ -59,7 +59,7 @@ export function swatches(parent: HTMLElement, material: string, current: string 
   const box = parent.createSpan({ cls: "sq-swatches" });
   for (const [name, tones] of Object.entries(colors)) {
     const sw = box.createSpan({ cls: name === current ? "sq-swatch is-on" : "sq-swatch" });
-    sw.style.background = tones[Math.floor(tones.length / 2)];
+    sw.setCssStyles({ background: tones[Math.floor(tones.length / 2)] });
     sw.setAttr("aria-label", name.replace(/_/g, " "));
     sw.onClickEvent(() => onPick(name));
   }

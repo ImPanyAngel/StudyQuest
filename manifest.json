@@ -1,9 +1,10 @@
 {
   "id": "studyquest",
   "name": "StudyQuest",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "minAppVersion": "1.7.2",
-  "description": "Turns each university quarter into a game run.",
+  "description": "Turn each university quarter into a game run, with objectives, evidence checks, prestige tiers and a pixel character.",
   "author": "Panayiotis Angelides",
+  "authorUrl": "https://github.com/ImPanyAngel",
   "isDesktopOnly": true
 }

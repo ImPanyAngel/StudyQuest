@@ -1,7 +1,7 @@
 {
   "name": "studyquest",
-  "version": "0.6.0",
-  "description": "Turns each university quarter into a game run.",
+  "version": "1.0.0",
+  "description": "Turn each university quarter into a game run, with objectives, evidence checks, prestige tiers and a pixel character.",
   "author": "Panayiotis Angelides",
   "license": "MIT",
   "repository": {

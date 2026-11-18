@@ -18,13 +18,17 @@ Courses are games, objectives are achievements, and every quarter ends in a perm
 
 ## Installation
 
-StudyQuest runs on Obsidian for desktop (1.7.2 or later). It isn't in the community plugin list yet, so install it by hand:
+StudyQuest runs on Obsidian for desktop (1.7.2 or later).
+
+**From Obsidian:** once it's listed, open **Settings → Community plugins → Browse**, search for StudyQuest, install it and turn it on.
+
+**By hand:**
 
 1. Download `main.js`, `manifest.json` and `styles.css` from the latest [release](https://github.com/ImPanyAngel/StudyQuest/releases).
 2. Put them in `<your vault>/.obsidian/plugins/studyquest/`.
 3. Reload Obsidian and turn on StudyQuest under **Settings → Community plugins**.
 
-Open it from the trophy icon in the ribbon or the **Open StudyQuest** command.
+Open it from the trophy icon in the ribbon or the **StudyQuest: Open home** command.
 
 ## Your data
 

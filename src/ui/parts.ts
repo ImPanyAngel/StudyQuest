@@ -57,7 +57,7 @@ export function renderLevel(parent: HTMLElement, r: RunRewards): void {
   line.createSpan({ cls: "sq-coins", text: `${r.coins} coins` });
   const bar = box.createDiv({ cls: "sq-xp-bar" });
   bar.setAttr("title", `${r.level.xpIntoLevel} / ${r.level.xpForNextLevel} XP to level ${r.level.level + 1}`);
-  bar.createSpan({ cls: "sq-xp-fill" }).style.width = `${(100 * r.level.xpIntoLevel) / r.level.xpForNextLevel}%`;
+  bar.createSpan({ cls: "sq-xp-fill" }).setCssStyles({ width: `${(100 * r.level.xpIntoLevel) / r.level.xpForNextLevel}%` });
 }
 
 /** Obsidian's built-in (Lucide) icon for each badge. */

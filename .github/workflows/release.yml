@@ -1,0 +1,39 @@
+name: Release
+
+# Pushing a version tag (e.g. 1.0.0, matching manifest.json) builds the plugin and
+# drafts a GitHub release with the three files Obsidian installs.
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Check the tag matches the manifest
+        run: test "$(node -p "require('./manifest.json').version")" = "$GITHUB_REF_NAME"
+
+      - name: Draft the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --draft --generate-notes main.js manifest.json styles.css

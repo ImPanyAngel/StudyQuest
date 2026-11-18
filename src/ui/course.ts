@@ -33,7 +33,7 @@ export function renderCourse(
   if (isResit(s, run.id, course.code)) head.createSpan({ cls: "sq-pill", text: "RESIT" });
   const p = courseProgress(s, run.id, course.code);
   const bar = head.createSpan({ cls: "sq-bar" });
-  bar.createSpan({ cls: "sq-bar-fill" }).style.width = `${p.pct ?? 0}%`;
+  bar.createSpan({ cls: "sq-bar-fill" }).setCssStyles({ width: `${p.pct ?? 0}%` });
   head.createSpan({ cls: "sq-pct", text: p.pct === null ? "—" : `${p.pct}%` });
 
   const box = el.createDiv({ cls: "sq-objectives" });

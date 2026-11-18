@@ -25,7 +25,7 @@ export default class StudyQuestPlugin extends Plugin {
     const choice = new RunChoice(data.run, (run) => void this.saveData({ ...data, run }));
     this.registerView(VIEW_TYPE, (leaf) => new StudyQuestView(leaf, this.store, folders, choice));
     this.addRibbonIcon("trophy", "Open StudyQuest", () => void this.openHome());
-    this.addCommand({ id: "open-studyquest", name: "Open StudyQuest", callback: () => void this.openHome() });
+    this.addCommand({ id: "open-home", name: "Open home", callback: () => void this.openHome() });
     this.badge = new StatusBadge(this.addStatusBarItem(), this.store, choice, this.store.clock, () => void this.openHome());
 
     this.dayTicker = new DayTicker(this.store.clock, () => void this.onNewDay());
