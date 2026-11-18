@@ -1,12 +1,14 @@
-/* StudyQuest — phase 1 wireframe styling. Uses Obsidian's base colours only for
-   readability in light and dark themes; everything else is StudyQuest's own. */
+/* StudyQuest. One look across every screen: Obsidian's base colours for readability in light and
+   dark themes, StudyQuest's own accents, monospace type, rounded panels and a shared spacing scale. */
 
+/* ── tokens ──────────────────────────────────────────────────────────── */
 .studyquest {
   --sq-fg: var(--text-normal);
   --sq-muted: var(--text-muted);
   --sq-faint: var(--text-faint);
   --sq-line: var(--background-modifier-border);
   --sq-bg: var(--background-primary);
+  --sq-panel: var(--background-secondary);
   --sq-hover: var(--background-modifier-hover);
   --sq-accent: #4aa3e0;
   --sq-track: color-mix(in srgb, var(--sq-fg) 12%, transparent);
@@ -16,32 +18,124 @@
   --sq-sat: #8a8a8a;
   --sq-font: ui-monospace, "SF Mono", Menlo, monospace;
 
+  --sq-s1: 4px;
+  --sq-s2: 8px;
+  --sq-s3: 12px;
+  --sq-s4: 16px;
+  --sq-s5: 24px;
+  --sq-s6: 32px;
+  --sq-radius: 8px;
+  --sq-radius-s: 4px;
+
   font-family: var(--sq-font);
   color: var(--sq-fg);
   background: var(--sq-bg);
 }
 
+/* ── frame ───────────────────────────────────────────────────────────── */
 /* Obsidian pads every view; StudyQuest's tab bar must touch the top edge to stay sticky
    without a gap, so the view itself gets no padding and the bar and body carry it. */
 .workspace-leaf-content[data-type="studyquest-view"] .view-content.studyquest { padding: 0; overflow-x: hidden; }
-.studyquest .sq-body { padding: 0 20px 32px; }
-.studyquest > .sq-prestige { padding: 16px 20px 32px; }
+.studyquest .sq-body { padding: 0 var(--sq-s5) var(--sq-s6); }
+.studyquest > .sq-prestige { padding: var(--sq-s4) var(--sq-s5) var(--sq-s6); }
 
-/* Sticky: stays at the top of the view while the content scrolls under it. */
+/* ── tab switchers (main bar and sub-tabs share one look) ────────────── */
 .studyquest .sq-tabs {
-  display: flex; gap: 4px; border-bottom: 1px solid var(--sq-line); margin: 0 0 18px; padding: 12px 20px 0;
+  display: flex; align-items: flex-end; gap: var(--sq-s2);
+  padding: var(--sq-s3) var(--sq-s5) 0; margin: 0 0 var(--sq-s5);
+  border-bottom: 1px solid var(--sq-line);
   position: sticky; top: 0; z-index: 2; background: var(--sq-bg);
 }
-.studyquest .sq-tab { padding: 6px 14px; font-size: 12px; color: var(--sq-muted); cursor: pointer; border: 1px solid transparent; border-bottom: none; border-radius: 4px 4px 0 0; }
-.studyquest .sq-tab:hover { color: var(--sq-fg); }
-.studyquest .sq-tab.is-active { color: var(--sq-fg); border-color: var(--sq-line); background: var(--sq-hover); }
-.studyquest .sq-run-switch { margin-left: auto; align-self: center; margin-bottom: 4px; font-size: 12px; }
+.studyquest .sq-subtabs { display: flex; gap: var(--sq-s5); border-bottom: 1px solid var(--sq-line); margin-bottom: var(--sq-s4); }
+.studyquest .sq-tab,
+.studyquest .sq-subtab {
+  padding: var(--sq-s2) var(--sq-s3); font-size: 12px; color: var(--sq-muted); cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.studyquest .sq-subtab { padding: var(--sq-s2) 0; }
+.studyquest .sq-tab:hover,
+.studyquest .sq-subtab:hover { color: var(--sq-fg); }
+.studyquest .sq-tab.is-active,
+.studyquest .sq-subtab.is-on { color: var(--sq-fg); border-bottom-color: var(--sq-accent); }
+.studyquest .sq-run-switch { margin-left: auto; align-self: center; margin-bottom: var(--sq-s1); font-size: 12px; }
 
-.studyquest .sq-muted { color: var(--sq-muted); font-size: 13px; padding: 6px 0; }
-.studyquest .sq-empty { padding: 40px 0; text-align: center; }
+/* ── type ────────────────────────────────────────────────────────────── */
+.studyquest .sq-page-title,
+.studyquest .sq-run-title { margin: 0 0 var(--sq-s3); font-size: 16px; font-weight: 600; }
+.studyquest .sq-section,
+.studyquest .sq-step-title {
+  margin: var(--sq-s5) 0 var(--sq-s2); font-size: 11px; font-weight: 600; color: var(--sq-muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.studyquest .sq-step-title { margin-top: 0; color: var(--sq-accent); }
+.studyquest .sq-divider {
+  font-size: 11px; color: var(--sq-faint); padding: var(--sq-s3) var(--sq-s2) var(--sq-s1);
+  border-top: 1px solid var(--sq-line); text-transform: uppercase; letter-spacing: 0.08em;
+}
+.studyquest .sq-muted { color: var(--sq-muted); font-size: 13px; padding: var(--sq-s2) 0; }
+.studyquest .sq-hint { font-size: 12px; color: var(--sq-faint); margin-top: var(--sq-s1); }
+.studyquest .sq-hint.is-warning { color: var(--sq-overdue); }
+.studyquest .sq-line { font-size: 13px; }
+.studyquest .sq-empty { padding: 48px 0; text-align: center; display: flex; flex-direction: column; align-items: center; gap: var(--sq-s3); }
+.studyquest .sq-empty p { margin: 0; }
+.studyquest .sq-back { font-size: 12px; color: var(--sq-muted); cursor: pointer; margin-bottom: var(--sq-s3); display: inline-block; }
+.studyquest .sq-back:hover { color: var(--sq-fg); }
 
-/* ── top row ── */
-.studyquest .sq-top { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+/* ── panels: every box looks the same ────────────────────────────────── */
+.studyquest .sq-courses,
+.studyquest .sq-player,
+.studyquest .sq-step,
+.studyquest .sq-card,
+.studyquest .sq-shop-item,
+.studyquest .sq-prestige-player,
+.studyquest .sq-char-stage .sq-character,
+.studyquest .sq-run-character {
+  border: 1px solid var(--sq-line); border-radius: var(--sq-radius); background: var(--sq-panel);
+}
+/* Anything that opens something highlights the same way. */
+.studyquest .sq-player.is-clickable,
+.studyquest .sq-card { cursor: pointer; transition: border-color 0.12s ease; }
+.studyquest .sq-player.is-clickable:hover,
+.studyquest .sq-card:hover { border-color: var(--sq-accent); }
+
+/* Characters (and the grey placeholder) sit centred in whatever holds them. */
+.studyquest .sq-player,
+.studyquest .sq-prestige-player,
+.studyquest .sq-card-art,
+.studyquest .sq-shop-thumb,
+.studyquest .sq-run-character { display: grid; place-items: center; }
+.studyquest canvas.sq-character { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+
+/* ── small parts: tags, marks, pills, chips ──────────────────────────── */
+.studyquest .sq-tag,
+.studyquest .sq-mark,
+.studyquest .sq-pill,
+.studyquest .sq-chip,
+.studyquest .sq-card-tier {
+  font-size: 10px; padding: 2px var(--sq-s2); border: 1px solid var(--sq-line); border-radius: var(--sq-radius-s);
+  text-align: center; flex: none; letter-spacing: 0.04em;
+}
+.studyquest .sq-tag { color: var(--sq-muted); min-width: 78px; }
+.studyquest .sq-mark { min-width: 56px; }
+.studyquest .sq-mark.is-open { border-style: dashed; color: var(--sq-faint); }
+.studyquest .sq-mark.is-done { border-color: var(--sq-accent); color: var(--sq-accent); }
+.studyquest .sq-mark.is-sat { border-color: var(--sq-sat); color: var(--sq-sat); }
+.studyquest .sq-mark.is-stain { border-color: var(--sq-overdue); color: var(--sq-overdue); }
+.studyquest .sq-pill { border-color: var(--sq-soon); color: var(--sq-soon); }
+.studyquest .sq-chip { font-size: 11px; cursor: pointer; background: none; color: var(--sq-fg); }
+.studyquest .sq-chip:hover { border-color: var(--sq-muted); }
+.studyquest .sq-chip.is-on { border-color: var(--sq-accent); color: var(--sq-accent); }
+
+/* ── bars ────────────────────────────────────────────────────────────── */
+.studyquest .sq-bar,
+.studyquest .sq-xp-bar { display: block; height: 6px; background: var(--sq-track); border-radius: 3px; overflow: hidden; flex: none; }
+.studyquest .sq-bar { width: 80px; }
+.studyquest .sq-xp-bar { height: 4px; margin-top: var(--sq-s1); }
+.studyquest .sq-bar-fill,
+.studyquest .sq-xp-fill { display: block; height: 100%; background: var(--sq-accent); }
+
+/* ── Home: top row ───────────────────────────────────────────────────── */
+.studyquest .sq-top { display: flex; gap: var(--sq-s5); align-items: flex-start; flex-wrap: wrap; }
 .studyquest .sq-ring {
   --sq-pct: 0;
   width: 132px; height: 132px; flex: none; border-radius: 50%;
@@ -52,155 +146,132 @@
 }
 .studyquest .sq-ring-value { font-size: 26px; font-weight: 600; }
 .studyquest .sq-ring-label { font-size: 11px; color: var(--sq-muted); max-width: 90px; text-align: center; }
-
 .studyquest .sq-middle { flex: 1; min-width: 260px; }
-.studyquest .sq-exam-week { font-size: 12px; color: var(--sq-faint); margin-bottom: 8px; }
-.studyquest .sq-courses { border: 1px solid var(--sq-line); padding: 8px 12px; }
-.studyquest .sq-course-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: 13px; cursor: pointer; }
-.studyquest .sq-course-row:hover .sq-name { text-decoration: underline; }
+.studyquest .sq-exam-week { font-size: 12px; color: var(--sq-faint); margin-bottom: var(--sq-s2); }
+.studyquest .sq-courses { padding: var(--sq-s2) var(--sq-s3); }
+.studyquest .sq-course-row { display: flex; align-items: center; gap: var(--sq-s3); padding: 6px 0; font-size: 13px; cursor: pointer; }
+.studyquest .sq-course-row:hover .sq-name { color: var(--sq-accent); }
 .studyquest .sq-code { color: var(--sq-accent); min-width: 84px; }
 .studyquest .sq-name { flex: 1; }
-.studyquest .sq-bar { width: 80px; height: 6px; background: var(--sq-track); flex: none; }
-.studyquest .sq-bar-fill { display: block; height: 100%; background: var(--sq-accent); }
 .studyquest .sq-pct { width: 38px; text-align: right; color: var(--sq-muted); }
-.studyquest .sq-pill { font-size: 10px; padding: 1px 6px; border: 1px solid var(--sq-soon); color: var(--sq-soon); }
 
-/* Placeholder character until phase 6. */
-.studyquest .sq-player { width: 140px; height: 170px; flex: none; border: 1px solid var(--sq-line); display: flex; align-items: center; justify-content: center; }
+/* The character card, with level, coins and XP under it. */
+.studyquest .sq-player-col { display: flex; flex-direction: column; gap: var(--sq-s2); flex: none; width: 148px; }
+.studyquest .sq-player { width: 148px; height: 168px; flex: none; }
+.studyquest .sq-level-line { display: flex; justify-content: space-between; font-size: 12px; }
+.studyquest .sq-level-n { font-weight: 600; }
+.studyquest .sq-coins { color: var(--sq-gold); }
+
+/* The placeholder figure, until a run has a character. */
 .studyquest .sq-sprite { position: relative; width: 48px; height: 76px; }
-.studyquest .sq-sprite > div { position: absolute; background: var(--sq-faint); }
+.studyquest .sq-sprite > div { position: absolute; background: var(--sq-faint); border-radius: 2px; }
 .studyquest .sq-sprite-head { left: 14px; top: 0; width: 20px; height: 18px; }
 .studyquest .sq-sprite-body { left: 8px; top: 20px; width: 32px; height: 30px; }
 .studyquest .sq-sprite-leg-l { left: 10px; top: 52px; width: 11px; height: 24px; }
 .studyquest .sq-sprite-leg-r { left: 27px; top: 52px; width: 11px; height: 24px; }
 
-/* ── objectives ── */
-.studyquest .sq-section { margin: 24px 0 6px; font-size: 14px; font-weight: 600; }
+/* Badges: icons, name on hover. */
+.studyquest .sq-badges { display: flex; flex-wrap: wrap; gap: var(--sq-s2); min-height: 20px; margin-top: var(--sq-s2); }
+.studyquest .sq-badge { display: inline-flex; width: 20px; height: 20px; align-items: center; justify-content: center; color: var(--sq-accent); }
+.studyquest .sq-badge svg { width: 18px; height: 18px; }
+.studyquest .sq-badge.is-permanent { color: var(--sq-gold); }
+
+/* ── objective lists ─────────────────────────────────────────────────── */
 .studyquest .sq-objectives { border-bottom: 1px solid var(--sq-line); }
-.studyquest .sq-obj-row { display: flex; align-items: center; gap: 12px; padding: 10px 6px; border-top: 1px solid var(--sq-line); font-size: 13px; }
-.studyquest .sq-obj-row.is-clickable { cursor: pointer; }
+.studyquest .sq-obj-row { display: flex; align-items: center; gap: var(--sq-s3); padding: 10px var(--sq-s2); border-top: 1px solid var(--sq-line); font-size: 13px; }
+.studyquest .sq-obj-row.is-clickable { cursor: pointer; border-radius: var(--sq-radius-s); }
 .studyquest .sq-obj-row.is-clickable:hover { background: var(--sq-hover); }
-.studyquest .sq-tag { font-size: 10px; padding: 2px 6px; border: 1px solid var(--sq-line); color: var(--sq-muted); min-width: 78px; text-align: center; flex: none; }
 .studyquest .sq-obj-title { flex: 1; }
-.studyquest .sq-steps { color: var(--sq-muted); font-size: 12px; }
+.studyquest .is-done .sq-obj-title { color: var(--sq-muted); }
+.studyquest .sq-steps,
 .studyquest .sq-date { color: var(--sq-muted); font-size: 12px; }
 .studyquest .is-soon .sq-date { color: var(--sq-soon); }
 .studyquest .is-overdue .sq-date { color: var(--sq-overdue); }
-.studyquest .sq-divider { font-size: 11px; color: var(--sq-faint); padding: 12px 6px 4px; border-top: 1px solid var(--sq-line); text-transform: uppercase; letter-spacing: 0.05em; }
-
-/* ── marks (course view) ── */
-.studyquest .sq-mark { font-size: 10px; padding: 2px 8px; min-width: 56px; text-align: center; flex: none; border: 1px solid var(--sq-line); }
-.studyquest .sq-mark.is-open { border-style: dashed; color: var(--sq-faint); }
-.studyquest .sq-mark.is-done { border-color: var(--sq-accent); color: var(--sq-accent); }
-.studyquest .sq-mark.is-sat { border-color: var(--sq-sat); color: var(--sq-sat); }
-.studyquest .is-done .sq-obj-title { color: var(--sq-muted); }
-
-/* ── course view ── */
-.studyquest .sq-back { font-size: 12px; color: var(--sq-muted); cursor: pointer; margin-bottom: 10px; display: inline-block; }
-.studyquest .sq-back:hover { color: var(--sq-fg); }
-.studyquest .sq-course-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; font-size: 16px; }
-.studyquest .sq-course-head .sq-bar { width: 160px; height: 8px; }
-
-/* ── setup ── */
-.studyquest .sq-step { border: 1px solid var(--sq-line); padding: 14px 16px; margin-bottom: 14px; }
-.studyquest .sq-step-title { margin: 0 0 10px; font-size: 13px; font-weight: normal; color: var(--sq-accent); }
-.studyquest .sq-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 4px; }
-.studyquest .sq-input, .studyquest .sq-select { font-family: var(--sq-font); font-size: 13px; }
-.studyquest .sq-steps-input { width: 100%; }
-.studyquest .sq-label { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; color: var(--sq-muted); }
-.studyquest .sq-btn { font-family: var(--sq-font); font-size: 12px; }
-.studyquest .sq-hint { font-size: 12px; color: var(--sq-faint); margin-top: 4px; }
-.studyquest .sq-hint.is-warning { color: var(--sq-overdue); }
-.studyquest .sq-line { font-size: 13px; }
-.studyquest .sq-list-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; border-top: 1px solid var(--sq-line); font-size: 13px; }
-.studyquest .sq-step .sq-select { margin: 0 8px 8px 0; }
-
-/* ── Prestige Up (layout B) ── */
-.studyquest .sq-prestige { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center; }
-.studyquest .sq-prestige-title { font-size: 40px; font-weight: 700; letter-spacing: 6px; color: var(--sq-gold); }
-.studyquest .sq-prestige-run { font-size: 13px; color: var(--sq-muted); letter-spacing: 1px; }
-.studyquest .sq-prestige-row { display: flex; align-items: center; gap: 40px; margin: 12px 0; }
-.studyquest .sq-prestige-player { width: 150px; height: 190px; border: 1px solid var(--sq-line); display: flex; align-items: center; justify-content: center; }
-.studyquest .sq-prestige-player .sq-sprite { transform: scale(1.8); }
-.studyquest .sq-prestige-result { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-.studyquest .sq-prestige-pct { font-size: 56px; font-weight: 700; }
-.studyquest .sq-prestige-tier { font-size: 15px; letter-spacing: 2px; padding: 4px 12px; border: 2px solid var(--sq-gold); color: var(--sq-gold); }
-.studyquest .sq-prestige-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-
-/* ── Prestige hall ── */
-.studyquest .sq-hall { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
-.studyquest .sq-card { border: 1px solid var(--sq-line); padding: 10px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; }
-.studyquest .sq-card:hover { border-color: var(--sq-gold); }
-.studyquest .sq-card.is-live { border-style: dashed; }
-.studyquest .sq-card-art { height: 132px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--sq-faint); background: repeating-linear-gradient(45deg, var(--sq-track) 0 6px, transparent 6px 12px); }
-.studyquest .sq-card-name { font-size: 13px; }
-.studyquest .sq-card-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.studyquest .sq-card-pct { font-size: 18px; font-weight: 700; }
-.studyquest .sq-card-tier { font-size: 11px; padding: 1px 6px; border: 1px solid var(--sq-gold); color: var(--sq-gold); }
-.studyquest .sq-card-stains { font-size: 11px; color: var(--sq-overdue); }
-.studyquest .sq-card-stains.is-none { color: var(--sq-faint); }
-.studyquest .sq-run-head { margin-bottom: 8px; }
-.studyquest .sq-run-title { font-size: 16px; font-weight: 600; }
-.studyquest .sq-mark.is-stain { border-color: var(--sq-overdue); color: var(--sq-overdue); }
-.studyquest .sq-closed-score { font-size: 28px; font-weight: 700; }
-
-/* ── evidence picker (Obsidian modal, outside .studyquest) ── */
-.sq-evidence-used { opacity: 0.45; }
-.sq-evidence-owner { font-size: 11px; color: var(--text-muted); }
 .studyquest .sq-evidence { font-size: 12px; color: var(--sq-accent); text-decoration: none; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .studyquest .sq-evidence:hover { text-decoration: underline; }
 .studyquest .sq-evidence.is-missing { color: var(--sq-faint); text-decoration: line-through; }
 
-/* ── phase 5a: level, XP, coins, badges ── */
-.studyquest .sq-player-col { display: flex; flex-direction: column; gap: 6px; flex: none; width: 140px; }
-.studyquest .sq-level-line { display: flex; justify-content: space-between; font-size: 12px; }
-.studyquest .sq-level-n { font-weight: 600; }
-.studyquest .sq-coins { color: var(--sq-muted); }
-.studyquest .sq-xp-bar { display: block; height: 4px; margin-top: 4px; background: var(--sq-track); }
-.studyquest .sq-xp-fill { display: block; height: 100%; background: var(--sq-accent); }
-.studyquest .sq-badges { display: flex; flex-wrap: wrap; gap: 6px; min-height: 20px; margin-top: 8px; }
-.studyquest .sq-badge { display: inline-flex; width: 20px; height: 20px; align-items: center; justify-content: center; color: var(--sq-accent); }
-.studyquest .sq-badge svg { width: 18px; height: 18px; }
-.studyquest .sq-badge.is-permanent { color: var(--sq-gold); }
-.studyquest .sq-card-level { font-size: 11px; color: var(--sq-muted); }
+/* ── course page ─────────────────────────────────────────────────────── */
+.studyquest .sq-course-head { display: flex; align-items: center; gap: var(--sq-s4); margin-bottom: var(--sq-s4); font-size: 16px; font-weight: 600; }
+.studyquest .sq-course-head .sq-bar { width: 160px; height: 8px; border-radius: 4px; }
+
+/* ── Setup ───────────────────────────────────────────────────────────── */
+.studyquest .sq-step { padding: var(--sq-s4); margin-bottom: var(--sq-s4); }
+.studyquest .sq-form { display: flex; flex-wrap: wrap; gap: var(--sq-s2); align-items: center; margin: var(--sq-s3) 0 var(--sq-s1); }
+.studyquest .sq-input,
+.studyquest .sq-select,
+.studyquest .sq-btn { font-family: var(--sq-font); font-size: 13px; }
+.studyquest .sq-btn { font-size: 12px; }
+.studyquest .sq-steps-input { width: 100%; }
+.studyquest .sq-label { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; color: var(--sq-muted); }
+.studyquest .sq-list-row { display: flex; align-items: center; gap: var(--sq-s3); padding: var(--sq-s2) 0; border-top: 1px solid var(--sq-line); font-size: 13px; }
+.studyquest .sq-step .sq-select { margin: 0 var(--sq-s2) var(--sq-s2) 0; }
+
+/* ── Prestige Up ─────────────────────────────────────────────────────── */
+.studyquest .sq-prestige { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sq-s4); text-align: center; }
+.studyquest .sq-prestige-title { font-size: 40px; font-weight: 700; letter-spacing: 6px; color: var(--sq-gold); }
+.studyquest .sq-prestige-run { font-size: 13px; color: var(--sq-muted); letter-spacing: 1px; }
+.studyquest .sq-prestige-row { display: flex; align-items: center; gap: 40px; margin: var(--sq-s3) 0; flex-wrap: wrap; justify-content: center; }
+.studyquest .sq-prestige-player { width: 160px; height: 190px; }
+.studyquest .sq-prestige-player .sq-sprite { transform: scale(1.8); }
+.studyquest .sq-prestige-result { display: flex; flex-direction: column; align-items: center; gap: var(--sq-s3); }
+.studyquest .sq-prestige-pct { font-size: 56px; font-weight: 700; }
+.studyquest .sq-prestige-tier { font-size: 15px; letter-spacing: 2px; padding: var(--sq-s1) var(--sq-s3); border: 2px solid var(--sq-gold); border-radius: var(--sq-radius-s); color: var(--sq-gold); }
 .studyquest .sq-prestige-level { font-size: 14px; letter-spacing: 1px; color: var(--sq-muted); }
 .studyquest .sq-prestige-unlocked { font-size: 13px; color: var(--sq-gold); }
+.studyquest .sq-prestige-buttons { display: flex; gap: var(--sq-s3); flex-wrap: wrap; justify-content: center; }
+.studyquest .sq-closed-score { font-size: 28px; font-weight: 700; }
 
-/* ── phase 5b: character ── */
-.studyquest canvas.sq-character { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
-.studyquest .sq-player.is-clickable { cursor: pointer; }
-.studyquest .sq-player.is-clickable:hover { border-color: var(--sq-accent); }
-.studyquest .sq-card-art canvas.sq-character { margin: 0 auto; }
-.studyquest .sq-run-head { position: relative; }
-.studyquest .sq-run-character { float: right; }
-.studyquest .sq-page-title { margin: 6px 0 12px; font-size: 15px; font-weight: 600; }
-.studyquest .sq-char-page { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
-.studyquest .sq-char-stage { width: 192px; flex: none; display: flex; flex-direction: column; gap: 6px; }
-.studyquest .sq-char-stage canvas.sq-character { border: 1px solid var(--sq-line); background: var(--sq-hover); }
-.studyquest .sq-credits-link { font-size: 11px; color: var(--sq-muted); cursor: pointer; }
-.studyquest .sq-char-form { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 8px; }
-.studyquest .sq-look-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.studyquest .sq-look-label { width: 80px; flex: none; font-size: 12px; color: var(--sq-muted); }
-.studyquest .sq-cycler { display: inline-flex; align-items: center; gap: 4px; }
-.studyquest .sq-cycler-name { min-width: 130px; text-align: center; font-size: 12px; }
-.studyquest .sq-step { padding: 0 8px; font-size: 13px; }
-.studyquest .sq-swatches { display: inline-flex; flex-wrap: wrap; gap: 3px; max-width: 320px; }
-.studyquest .sq-swatch { width: 14px; height: 14px; border: 1px solid var(--sq-line); cursor: pointer; }
+/* ── Hall ────────────────────────────────────────────────────────────── */
+.studyquest .sq-hall { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: var(--sq-s4); }
+.studyquest .sq-card { padding: var(--sq-s3); display: flex; flex-direction: column; gap: var(--sq-s2); }
+.studyquest .sq-card.is-live { border-style: dashed; }
+.studyquest .sq-card-art {
+  height: 140px; border-radius: var(--sq-radius-s); font-size: 10px; color: var(--sq-faint);
+  background: repeating-linear-gradient(45deg, var(--sq-track) 0 6px, transparent 6px 12px);
+}
+.studyquest .sq-card-name { font-size: 13px; font-weight: 600; }
+.studyquest .sq-card-meta { display: flex; justify-content: space-between; align-items: center; gap: var(--sq-s2); }
+.studyquest .sq-card-pct { font-size: 18px; font-weight: 700; }
+.studyquest .sq-card-level { font-size: 11px; color: var(--sq-muted); }
+.studyquest .sq-card-tier { border-color: var(--sq-gold); color: var(--sq-gold); }
+.studyquest .sq-card-stains { font-size: 11px; color: var(--sq-overdue); }
+.studyquest .sq-card-stains.is-none { color: var(--sq-faint); }
+.studyquest .sq-run-head { display: flex; flex-direction: column; margin-bottom: var(--sq-s3); position: relative; padding-right: 84px; min-height: 72px; }
+.studyquest .sq-run-head .sq-run-title { margin: 0; }
+.studyquest .sq-run-character { position: absolute; right: 0; top: 0; width: 72px; height: 72px; }
+
+/* ── character pages ─────────────────────────────────────────────────── */
+.studyquest .sq-char-page { display: flex; gap: var(--sq-s5); align-items: flex-start; flex-wrap: wrap; }
+.studyquest .sq-char-stage { width: 194px; flex: none; display: flex; flex-direction: column; gap: var(--sq-s2); }
+.studyquest .sq-credits-link { font-size: 11px; color: var(--sq-muted); cursor: pointer; margin-top: var(--sq-s1); }
+.studyquest .sq-credits-link:hover { color: var(--sq-accent); }
+.studyquest .sq-char-form { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: var(--sq-s3); }
+.studyquest .sq-char-form > .sq-section { margin-top: var(--sq-s3); }
+.studyquest .sq-look-row { display: flex; align-items: center; gap: var(--sq-s3); flex-wrap: wrap; }
+.studyquest .sq-look-label { width: 88px; flex: none; font-size: 12px; color: var(--sq-muted); }
+.studyquest .sq-cycler { display: inline-flex; align-items: center; gap: var(--sq-s1); }
+.studyquest .sq-cycler-name { min-width: 150px; text-align: center; font-size: 12px; }
+.studyquest .sq-cycle-btn { padding: 0 var(--sq-s2); font-size: 13px; }
+.studyquest .sq-swatches,
+.studyquest .sq-variants { display: inline-flex; flex-wrap: wrap; gap: var(--sq-s1); max-width: 360px; }
+.studyquest .sq-swatch { width: 16px; height: 16px; border: 1px solid var(--sq-line); border-radius: 3px; cursor: pointer; }
 .studyquest .sq-swatch.is-on { outline: 2px solid var(--sq-accent); outline-offset: 1px; }
-.studyquest .sq-variants { display: inline-flex; flex-wrap: wrap; gap: 3px; max-width: 360px; }
-.studyquest .sq-chip { font-size: 11px; padding: 1px 8px; border: 1px solid var(--sq-line); cursor: pointer; background: none; }
-.studyquest .sq-chip.is-on { border-color: var(--sq-accent); color: var(--sq-accent); }
-.studyquest .sq-done { align-self: flex-start; margin-top: 8px; }
-.studyquest .sq-subtabs { display: flex; gap: 14px; border-bottom: 1px solid var(--sq-line); margin-bottom: 6px; }
-.studyquest .sq-subtab { padding: 4px 0; font-size: 12px; color: var(--sq-muted); cursor: pointer; }
-.studyquest .sq-subtab.is-on { color: var(--sq-fg); border-bottom: 2px solid var(--sq-accent); }
-.studyquest .sq-save-bar { display: flex; gap: 8px; margin-top: 8px; }
+.studyquest .sq-done { align-self: flex-start; margin-top: var(--sq-s2); }
+.studyquest .sq-save-bar { display: flex; gap: var(--sq-s2); margin-top: var(--sq-s2); }
+.studyquest .sq-readonly { pointer-events: none; opacity: 0.6; display: flex; flex-direction: column; gap: var(--sq-s3); }
+
+/* Shop */
 .studyquest .sq-shelf.is-locked { opacity: 0.45; }
-.studyquest .sq-shop-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-.studyquest .sq-shop-item { width: 92px; border: 1px solid var(--sq-line); padding: 4px; display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; }
-.studyquest .sq-shop-thumb { height: 64px; }
-.studyquest .sq-shop-name { font-size: 10px; line-height: 1.2; min-height: 24px; }
-.studyquest .sq-price { font-size: 11px; color: var(--sq-gold); padding: 1px 10px; }
-.studyquest .sq-owned { font-size: 10px; color: var(--sq-accent); }
+.studyquest .sq-shelf .sq-section { margin-top: var(--sq-s4); }
+.studyquest .sq-shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: var(--sq-s2); }
+.studyquest .sq-shop-item { padding: var(--sq-s2) var(--sq-s1); display: flex; flex-direction: column; align-items: center; gap: var(--sq-s1); text-align: center; }
+.studyquest .sq-shop-thumb { width: 64px; height: 64px; }
+.studyquest .sq-shop-name { font-size: 10px; line-height: 1.25; min-height: 26px; }
+.studyquest .sq-price { font-size: 11px; color: var(--sq-gold); padding: 1px var(--sq-s3); }
+.studyquest .sq-owned { font-size: 10px; color: var(--sq-accent); padding: 3px 0; }
+
+/* ── outside the view: Obsidian modals ───────────────────────────────── */
+.sq-evidence-used { opacity: 0.45; }
+.sq-evidence-owner { font-size: 11px; color: var(--text-muted); }
 .sq-credits pre { white-space: pre-wrap; font-size: 11px; max-height: 60vh; overflow: auto; }
-.studyquest .sq-readonly { pointer-events: none; opacity: 0.6; display: flex; flex-direction: column; gap: 8px; }

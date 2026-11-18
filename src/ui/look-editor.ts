@@ -48,9 +48,9 @@ export function cycler(parent: HTMLElement, options: Option[], current: string |
   const i = Math.max(0, options.findIndex((o) => o.id === current));
   const step = (d: number) => onPick(options[(i + d + options.length) % options.length].id);
   const box = parent.createSpan({ cls: "sq-cycler" });
-  box.createEl("button", { cls: "sq-step", text: "‹" }).onClickEvent(() => step(-1));
+  box.createEl("button", { cls: "sq-cycle-btn", text: "‹" }).onClickEvent(() => step(-1));
   box.createSpan({ cls: "sq-cycler-name", text: options[i]?.name ?? "—" });
-  box.createEl("button", { cls: "sq-step", text: "›" }).onClickEvent(() => step(1));
+  box.createEl("button", { cls: "sq-cycle-btn", text: "›" }).onClickEvent(() => step(1));
 }
 
 /** One swatch per palette colour, showing a mid tone. */

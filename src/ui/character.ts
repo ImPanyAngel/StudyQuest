@@ -65,7 +65,7 @@ export function renderCharacterPage(
   const main = page.createDiv({ cls: "sq-char-form" });
   const subs = main.createDiv({ cls: "sq-subtabs" });
   const sub = ui.sub ?? "wardrobe";
-  for (const [id, label] of [["wardrobe", "Wardrobe"], ["shop", "Shop"], ["looks", "Looks (free)"]] as const) {
+  for (const [id, label] of [["wardrobe", "Wardrobe"], ["shop", "Shop"], ["looks", "Customisation"]] as const) {
     subs.createSpan({ cls: id === sub ? "sq-subtab is-on" : "sq-subtab", text: label }).onClickEvent(() => ((ui.sub = id), rerender()));
   }
   if (frozen) main.createDiv({ cls: "sq-hint", text: `This run has ${run.closed ? "closed" : "ended"}. Its character is final.` });
