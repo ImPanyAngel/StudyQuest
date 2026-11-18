@@ -1,9 +1,12 @@
+import { fits, item, shelf, type Body } from "./catalog";
+import { checkLook, type Look } from "./character";
 import { localDateOf, type LocalDate } from "./dates";
 import { evidenceOwner, examsDueForSat, runEnded, runProgress, runsDueToClose } from "./derive";
 import { BULK_KINDS, EVIDENCE_KINDS, KIND_NAMES, type IdFactory, type Kind, type QuestEvent } from "./events";
 import { folderError, sameFolder } from "./folders";
 import { TYPE_CODES, objectiveId, runIdFromName } from "./ids";
 import { tierFor } from "./prestige";
+import { runRewards } from "./rewards";
 import { applyEvent } from "./replay";
 import { err, ok, type Result } from "./result";
 import type { State } from "./state";
@@ -21,7 +24,11 @@ export type Action =
   | { type: "acknowledgePrestige"; run: string }
   | { type: "completeWithEvidence"; obj: string; path: string }
   | { type: "bumpReading"; obj: string; level: number }
-  | { type: "undoBump"; obj: string };
+  | { type: "undoBump"; obj: string }
+  | { type: "createCharacter"; run: string; body: Body; look: Look }
+  | { type: "changeLook"; run: string; look: Look }
+  | { type: "buyItem"; run: string; item: string }
+  | { type: "undoPurchase"; run: string; item: string };
 
 const MAX_BULK = 50;
 
@@ -181,6 +188,36 @@ function draftsFor(s: State, a: Action, now: Date): Result<Draft[]> {
       if (blocked(o.run)) return err(blocked(o.run)!);
       return ok([a.type === "bumpReading" ? { type: "reading_bumped", obj: a.obj, level: a.level } : { type: "reading_bump_undone", obj: a.obj }]);
     }
+    case "createCharacter": {
+      if (blocked(a.run)) return err(blocked(a.run)!);
+      if (s.runs.get(a.run)?.character) return err("This run already has a character.");
+      const bad = checkLook(s, a.run, a.body, a.look);
+      return bad ? err(bad) : ok([{ type: "character_created", run: a.run, body: a.body, look: a.look }]);
+    }
+    case "changeLook": {
+      if (blocked(a.run)) return err(blocked(a.run)!);
+      const c = s.runs.get(a.run)?.character;
+      if (!c) return err("Make this run's character first.");
+      const bad = checkLook(s, a.run, c.body, a.look, c.look);
+      return bad ? err(bad) : ok([{ type: "character_changed", run: a.run, look: a.look }]);
+    }
+    case "buyItem": {
+      if (blocked(a.run)) return err(blocked(a.run)!);
+      const r = s.runs.get(a.run);
+      if (!r?.character) return err("Make this run's character first.");
+      const it = item(a.item);
+      const sh = it && shelf(it);
+      if (!it || !sh) return err("That isn't for sale.");
+      if (!fits(it, r.character.body)) return err(`${it.name} isn't made for this body.`);
+      if (r.purchases.has(it.id)) return err(`You already own ${it.name}.`);
+      const rewards = runRewards(s, a.run);
+      if (rewards.level.level < sh.level) return err(`${it.name} opens at level ${sh.level}.`);
+      if (rewards.coins < sh.price) return err(`${it.name} costs ${sh.price} coins; you have ${rewards.coins}.`);
+      return ok([{ type: "item_bought", run: a.run, item: it.id, price: sh.price }]);
+    }
+    case "undoPurchase":
+      if (blocked(a.run)) return err(blocked(a.run)!);
+      return ok([{ type: "purchase_undone", run: a.run, item: a.item }]);
     case "acknowledgePrestige":
       return ok([{ type: "prestige_seen", run: a.run }]);
     case "checkStep": {

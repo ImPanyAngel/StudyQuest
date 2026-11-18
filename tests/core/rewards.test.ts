@@ -63,12 +63,12 @@ describe("runRewards", () => {
       ev.completed(l.obj, "silver", at(3), "L.md"),
       ev.completed(k.obj, "silver", at(3), "K.md"),
     ]);
-    expect(runRewards(s, R)).toEqual({ xp: 10, coins: 10, level: { level: 1, xpIntoLevel: 10, xpForNextLevel: 50 } });
+    expect(runRewards(s, R)).toEqual({ xp: 10, earned: 10, coins: 10, level: { level: 1, xpIntoLevel: 10, xpForNextLevel: 50 } });
     expect(runRewards(s, "Career").xp).toBe(10);
   });
 
   test("a run with no objectives starts at level 1 with nothing", () => {
-    expect(runRewards(replay([ev.created()]), R)).toEqual({ xp: 0, coins: 0, level: { level: 1, xpIntoLevel: 0, xpForNextLevel: 50 } });
+    expect(runRewards(replay([ev.created()]), R)).toEqual({ xp: 0, earned: 0, coins: 0, level: { level: 1, xpIntoLevel: 0, xpForNextLevel: 50 } });
   });
 
   test("a closed run's stains add nothing", () => {

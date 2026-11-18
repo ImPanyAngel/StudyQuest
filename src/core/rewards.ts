@@ -29,7 +29,9 @@ export function levelFor(xp: number): LevelInfo {
 
 export interface RunRewards {
   xp: number;
-  /** Earned coins equal earned XP; phase 5b spends them. */
+  /** Coins earned: equal to XP earned. */
+  earned: number;
+  /** Coins left: earned minus what live purchases cost. */
   coins: number;
   level: LevelInfo;
 }
@@ -37,7 +39,9 @@ export interface RunRewards {
 export function runRewards(s: State, run: string): RunRewards {
   let xp = 0;
   for (const o of s.objectives.values()) if (o.run === run) xp += objectiveXp(o);
-  return { xp, coins: xp, level: levelFor(xp) };
+  let spent = 0;
+  for (const p of s.runs.get(run)?.purchases.values() ?? []) spent += p.price;
+  return { xp, earned: xp, coins: xp - spent, level: levelFor(xp) };
 }
 
 // ── badges ──────────────────────────────────────────────────────────────
