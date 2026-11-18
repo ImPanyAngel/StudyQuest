@@ -113,13 +113,14 @@ Plain rules, no AI. They run instantly when an evidence file is picked, and neve
 
 ## Rewards and pixel character
 
-Rewards stay small. Coins buy everyday cosmetics, and the best cosmetics can only be earned through achievements.
+Rewards stay small, and every run is a **roguelike run**: XP, level, coins and even the character start over each run. Overlapping runs keep their own. Everything is calculated from the log, so a retuned weight applies to past work too.
 
-- **XP and levels.** Every completed objective gives XP, weighted by type (an assignment is worth more than a lecture).
-- **Coins.** Earned with XP and spent in a small cosmetics shop.
-- **Achievement unlocks.** Some cosmetics can't be bought, e.g. for a course at 100%, a first Tier 5 run, or every lecture in a course done.
-- **Character.** Layered pixel sprites (base, hair, top, bottom, accessory, background) at a small native size, scaled up with crisp pixels. The details are still open.
-- **Prestige snapshot.** Each prestige card keeps the outfit you wore that run, so the history doubles as a wardrobe timeline.
+- **XP and coins.** A finished objective earns XP for its run: lecture 10, lab 15, assignment 40, exam sat 50, reading 5 per chapter bump plus 20 when finished. Coins equal XP earned; coins get spent, XP never drops.
+- **Levels.** Every run starts at level 1. Going from level L to L + 1 costs 50 + 10 × (L − 1) XP, so a typical quarter reaches about level 12.
+- **Badges within a run.** Course complete (every objective of a course done) and Lecture sweep (every lecture of a course done). They hold while their condition does and end with the run.
+- **Permanent badges.** First prestige (first run closed), Tier 3 run (first close at Tier 3 or better) and Tier 5 run (first close at Tier 5). Each is credited to the run that earned it and shown on its Prestige Up screen.
+- **Character (5b).** Layered pixel sprites (base, hair, top, bottom, accessory, background), made fresh each run: free basics at creation, clothes bought with that run's coins, in-run badges unlocking special items for that run, and permanent badges unlocking items free in every later run. Art: a free sprite sheet (LPC-style, CC-BY / OGA-BY / CC-BY-SA / GPL / CC0) with a credits file.
+- **Prestige snapshot.** Each prestige card keeps that run's character, so the Hall is a gallery of every character you've made.
 
 ## Screens and styling
 
@@ -131,7 +132,7 @@ Styling is unrestricted. Plugin views are plain HTML, CSS and canvas, so StudyQu
 | Setup | Run dates, courses, adding objectives |
 | Course | One course's full objective list with marks, evidence links, completion % (opened from Home) |
 | Objective | Linked evidence, DONE / SAT / OPEN / STAIN mark |
-| Prestige hall | Past runs as cards: tier, %, stains, outfit snapshot |
+| Prestige hall | Past runs as cards: tier, %, level, stains, character snapshot; a run's page lists its badges |
 | Wardrobe and shop | Equip and buy cosmetics, see locked achievement items |
 
 There's also a ribbon icon, a status-bar badge (e.g. "Q2 64%") and command-palette commands.
@@ -166,7 +167,9 @@ Phases 1–2 make it usable for Q2 with manual objectives. Each later phase adds
 2. **Prestige.** No-delete with an undo window, run close, tiers, Prestige hall.
 3. **Evidence and readings.** An evidence file per completion, picked from the vault, one file per objective; readings as chapter counters. Spec: `docs/superpowers/specs/2026-11-17-phase-3-evidence-design.md`.
 4. **File checks and one DONE mark.** Notebook and note rules on the picked file; silver and gold replaced by DONE. Spec: `docs/superpowers/specs/2026-11-17-phase-4-checks-design.md`.
-5. **Character and rewards.** XP, levels, coins, shop, wardrobe, pixel sprites, outfit snapshots.
+5. **Character and rewards**, in two parts:
+   - **5a. XP, levels, coins and badges.** Spec: `docs/superpowers/specs/2026-11-18-phase-5a-xp-design.md`.
+   - **5b. Character, shop and wardrobe.** Waits for the sprite sheet; ships a credits file for CC-BY / OGA-BY / CC-BY-SA / GPL art.
 
 Later, maybe: AI checks through a remote API or a homelab.
 
