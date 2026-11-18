@@ -30,10 +30,10 @@ test("rejects invalid dates", () => {
   expect(applyEvent(emptyState(), ev.created("A", "2026-11-31", "2027-01-30"))).toEqual(expect.any(String));
 });
 
-test("rejects overlapping runs", () => {
-  const s = replay([ev.created()]);
-  expect(applyEvent(s, ev.created("Q3", Q2.end, "2027-04-10"))).toEqual(expect.any(String));
-  expect(applyEvent(s, ev.created("Q3", "2027-01-31", "2027-04-10"))).toBeNull();
+test("overlapping runs are accepted", () => {
+  const s = replay([ev.created(), ev.created("Career", "2026-09-01", "2027-07-15")]);
+  expect([...s.runs.keys()].sort()).toEqual(["2026-27-Q2", "Career"]);
+  expect(applyEvent(s, ev.created("Q3", Q2.end, "2027-04-10"))).toBeNull();
 });
 
 test("withinUndoWindow is inclusive at 30 minutes", () => {
@@ -84,7 +84,7 @@ test("replay orders by t regardless of input order", () => {
 test("rejected events leave state untouched", () => {
   const s = replay([ev.created()]);
   const before = JSON.stringify([...s.runs.keys()]);
-  applyEvent(s, ev.created("Overlap", "2026-12-01", "2027-02-01"));
+  expect(applyEvent(s, ev.created("Short", "2026-12-01", "2026-12-03"))).toEqual(expect.any(String));
   expect(JSON.stringify([...s.runs.keys()])).toBe(before);
 });
 

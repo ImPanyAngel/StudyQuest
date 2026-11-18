@@ -16,11 +16,11 @@ function run(history: QuestEvent[], a: Action, now: Date): { history: QuestEvent
 
 const base = (): QuestEvent[] => [ev.created(), ev.course(R, "C1", at(1))];
 
-test("createRun derives id, trims, and rejects overlap", () => {
+test("createRun derives id and trims; overlapping dates are fine", () => {
   const r = run([], { type: "createRun", name: " 2026-27 Q2 ", start: Q2.start, end: Q2.end }, min(0));
   expect(r.events).toMatchObject([{ type: "quarter_created", run: R, name: "2026-27 Q2", t: min(0).toISOString() }]);
   const o = run(r.history, { type: "createRun", name: "Overlap", start: "2026-12-01", end: "2027-02-01" }, min(1));
-  expect(o.error).toEqual(expect.any(String));
+  expect(o.error).toBeUndefined();
 });
 
 test("addCourse refuses a folder with a forbidden character", () => {

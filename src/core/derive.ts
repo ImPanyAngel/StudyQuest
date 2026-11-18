@@ -41,12 +41,30 @@ export function isResit(s: State, run: string, course: string): boolean {
 
 export function currentRun(s: State, today: LocalDate): RunState | null {
   const runs = [...s.runs.values()];
-  const containing = runs.find((r) => r.start <= today && today <= r.end);
+  // Overlapping runs: the one ending soonest (normally the quarter), then earliest start, then name.
+  const containing = runs
+    .filter((r) => r.start <= today && today <= r.end)
+    .sort((a, b) => a.end.localeCompare(b.end) || a.start.localeCompare(b.start) || a.name.localeCompare(b.name))[0];
   if (containing) return containing;
   const upcoming = runs.filter((r) => r.start > today).sort((a, b) => (a.start < b.start ? -1 : 1));
   if (upcoming.length) return upcoming[0];
   const past = runs.filter((r) => r.end < today).sort((a, b) => (a.end > b.end ? -1 : 1));
   return past[0] ?? null;
+}
+
+/** Runs that aren't closed, by start date then name: the run switch's list. */
+export function openRuns(s: State): RunState[] {
+  return [...s.runs.values()].filter((r) => !r.closed).sort((a, b) => a.start.localeCompare(b.start) || a.name.localeCompare(b.name));
+}
+
+/** The run Home and the badge show: the remembered one while it's open, else currentRun. */
+export function chosenRun(s: State, remembered: string | undefined, today: LocalDate): RunState | null {
+  const r = remembered === undefined ? undefined : s.runs.get(remembered);
+  return r && !r.closed ? r : currentRun(s, today);
+}
+
+export function runHasExams(s: State, run: string): boolean {
+  return [...s.objectives.values()].some((o) => o.run === run && o.kind === "exam");
 }
 
 export function runEnded(run: RunState, today: LocalDate): boolean {

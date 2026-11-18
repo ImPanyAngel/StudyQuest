@@ -86,13 +86,10 @@ export function replay(events: QuestEvent[]): State {
 
 // ── runs ────────────────────────────────────────────────────────────────
 
-function checkRunDates(state: State, start: LocalDate, end: LocalDate, self?: string): string | null {
+function checkRunDates(start: LocalDate, end: LocalDate): string | null {
   if (!isLocalDate(start) || !isLocalDate(end)) return "Dates must be valid YYYY-MM-DD dates.";
   if (daysBetween(start, end) < 7) return "A run must last at least 7 days.";
-  for (const r of state.runs.values()) {
-    if (r.id === self) continue;
-    if (start <= r.end && r.start <= end) return `These dates overlap with run "${r.name}".`;
-  }
+  // Runs may overlap: a side run (e.g. a career roadmap) can span several quarters.
   return null;
 }
 
@@ -115,7 +112,7 @@ function quarterCreated(state: State, e: QuarterCreated): string | null {
   if (!id.ok) return id.error;
   if (id.value !== e.run) return "Run id doesn't match its name.";
   if (state.runs.has(e.run)) return `A run called "${e.name}" already exists.`;
-  const bad = checkRunDates(state, e.start, e.end);
+  const bad = checkRunDates(e.start, e.end);
   if (bad) return bad;
   state.runs.set(e.run, { id: e.run, name: e.name, start: e.start, end: e.end, createdAt: e.t, courses: new Map() });
   return null;
@@ -125,7 +122,7 @@ function quarterDatesCorrected(state: State, e: QuarterDatesCorrected): string |
   const run = state.runs.get(e.run);
   if (!run) return "Unknown run.";
   if (!withinUndoWindow(run.createdAt, e.t)) return "The run's dates are locked.";
-  const bad = checkRunDates(state, e.start, e.end, run.id) ?? datedObjectivesFit(state, run.id, e.start, e.end);
+  const bad = checkRunDates(e.start, e.end) ?? datedObjectivesFit(state, run.id, e.start, e.end);
   if (bad) return bad;
   run.start = e.start;
   run.end = e.end;

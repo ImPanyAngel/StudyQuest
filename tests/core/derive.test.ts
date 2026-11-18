@@ -4,12 +4,15 @@ import {
   canUndoObjective,
   courseObjectives,
   courseProgress,
+  chosenRun,
   currentRun,
   examsDueForSat,
   homeRows,
   isResit,
+  openRuns,
   percent,
   runEnded,
+  runHasExams,
   runProgress,
   shortName,
   undoDeadline,
@@ -88,6 +91,43 @@ test("currentRun: containing, else next upcoming, else latest past, else null", 
   expect(currentRun(s, "2026-03-15")!.id).toBe("P2");
   expect(currentRun(s, "2026-11-16")!.id).toBe("U1");
   expect(currentRun(s, "2027-12-01")!.id).toBe("U2");
+});
+
+describe("overlapping runs", () => {
+  const career = () => ev.created("Career", "2026-09-01", "2027-07-15");
+
+  test("currentRun prefers the containing run that ends soonest", () => {
+    expect(currentRun(replay([career(), ev.created()]), "2026-11-16")!.id).toBe(R);
+    expect(currentRun(replay([ev.created(), career()]), "2026-11-16")!.id).toBe(R);
+  });
+
+  test("openRuns lists runs that aren't closed, by start then name", () => {
+    const s = replay([
+      ev.created("Old", "2026-10-01", "2026-10-15", at(-60)),
+      ev.closed("Old", 0, 0, 0, at(-1)),
+      ev.created(),
+      ev.created("B side", "2026-11-09", "2026-12-20"),
+      career(),
+    ]);
+    expect(openRuns(s).map((r) => r.id)).toEqual(["Career", "2026-27-Q2", "B-side"]);
+  });
+
+  test("chosenRun uses the remembered open run, else falls back to currentRun", () => {
+    const s = replay([
+      ev.created("Old", "2026-10-01", "2026-10-15", at(-60)),
+      ev.closed("Old", 0, 0, 0, at(-1)),
+      ev.created(),
+      career(),
+    ]);
+    expect(chosenRun(s, "Career", "2026-11-16")!.id).toBe("Career");
+    for (const remembered of ["Old", "nope", undefined]) expect(chosenRun(s, remembered, "2026-11-16")!.id).toBe(R);
+  });
+});
+
+test("runHasExams turns true once an exam is added", () => {
+  const h = [ev.created(), ev.course(R, "C1"), ev.objective(R, "C1", "lecture", 1)];
+  expect(runHasExams(replay(h), R)).toBe(false);
+  expect(runHasExams(replay([...h, ev.objective(R, "C1", "exam", 1, at(2), { date: "2027-01-27" })]), R)).toBe(true);
 });
 
 test("runEnded is strict after end", () => {
