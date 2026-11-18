@@ -28,6 +28,18 @@ test("addCourse refuses a folder with a forbidden character", () => {
   expect(r.error).toBe("A folder name can't contain ?.");
 });
 
+test("addCourse refuses a folder another course already uses, in any case or spelling", () => {
+  const r = run(base(), { type: "addCourse", run: R, code: "C2", name: "n", folder: "/c1" }, min(10));
+  expect(r.error).toBe("That folder is already used by C1 · C1 course.");
+});
+
+test("a resit of the same course may share its folder; an undone course frees it", () => {
+  const old = [ev.created("Old", "2026-10-01", "2026-10-15", at(-60)), ev.course("Old", "C1", at(-59))];
+  expect(run([...old, ev.created()], { type: "addCourse", run: R, code: "C1", name: "n", folder: "C1/" }, min(10)).error).toBeUndefined();
+  const freed = [...base(), ev.courseUndone(R, "C1", at(2))];
+  expect(run(freed, { type: "addCourse", run: R, code: "C2", name: "n", folder: "C1/" }, min(10)).error).toBeUndefined();
+});
+
 test("addCourse trims fields", () => {
   const r = run([ev.created()], { type: "addCourse", run: R, code: " DSAIT4000 ", name: " ML ", folder: " DSAIT4000/ " }, min(1));
   expect(r.events).toMatchObject([{ type: "course_added", course: "DSAIT4000", name: "ML", folder: "DSAIT4000/" }]);

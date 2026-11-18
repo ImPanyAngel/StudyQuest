@@ -28,3 +28,9 @@ export function folderError(path: string): string | null {
   const ch = FORBIDDEN.find((c) => path.includes(c));
   return ch ? `A folder name can't contain ${ch}.` : null;
 }
+
+/** Two paths name the same folder: slashes and spaces normalised, compared ignoring case (macOS folders are case-insensitive). */
+export function sameFolder(a: string, b: string): boolean {
+  const key = (p: string) => (folderChain(p).at(-1) ?? "").toLowerCase();
+  return key(a) === key(b);
+}

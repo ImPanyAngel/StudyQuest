@@ -22,6 +22,7 @@ When a course is added in Setup, its folder should actually exist in the vault s
 ## Claude's calls
 
 - A folder typed in Setup goes inside `Courses/` (typing `DSAIT4005` gives `Courses/DSAIT4005/`, and a typed `Courses/` prefix isn't doubled). Missing parent folders are created too. (First built as a full vault path; the user's check showed that was wrong.)
+- **One folder per course** (asked for in the user's check): adding a course is refused if a different course, in any run, already uses that folder ("That folder is already used by CODE · Name."), compared ignoring case and slashes. A resit of the same course code in a later run may share its old folder. An undone course frees its folder. A folder that exists on disk but belongs to no course is still used as it is.
 - Undo removes the folder only if StudyQuest created it during this Obsidian session and it's still empty, so a folder you made yourself is never removed. Removal goes through Obsidian's trash setting (`fileManager.trashFile`).
 - Planning refuses a folder path that is empty, has a `.` or `..` part, or contains `\ : * ? " < > |`, with a clear message. Replay doesn't check folders, so old logs replay unchanged.
 - The log stores the resolved path (e.g. `Courses/DSAIT4005/`), which is what Setup shows.

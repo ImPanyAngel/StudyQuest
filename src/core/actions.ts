@@ -1,7 +1,7 @@
 import { localDateOf, type LocalDate } from "./dates";
 import { evidenceOwner, examsDueForSat, runEnded, runProgress, runsDueToClose } from "./derive";
 import { BULK_KINDS, EVIDENCE_KINDS, KIND_NAMES, type IdFactory, type Kind, type QuestEvent } from "./events";
-import { folderError } from "./folders";
+import { folderError, sameFolder } from "./folders";
 import { TYPE_CODES, objectiveId, runIdFromName } from "./ids";
 import { tierFor } from "./prestige";
 import { applyEvent } from "./replay";
@@ -95,6 +95,12 @@ function draftsFor(s: State, a: Action, now: Date): Result<Draft[]> {
       if (blocked(a.run)) return err(blocked(a.run)!);
       const bad = folderError(a.folder);
       if (bad) return err(bad);
+      // One folder per course; a resit (same code in another run) shares its old folder.
+      for (const r of s.runs.values()) {
+        for (const c of r.courses.values()) {
+          if (c.code !== a.code.trim() && sameFolder(c.folder, a.folder)) return err(`That folder is already used by ${c.code} · ${c.name}.`);
+        }
+      }
       return ok([{ type: "course_added", run: a.run, course: a.code.trim(), name: a.name.trim(), folder: a.folder.trim() }]);
     }
     case "undoCourse":
