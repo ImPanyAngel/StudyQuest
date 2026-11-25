@@ -180,6 +180,7 @@
 /* ── objective lists ─────────────────────────────────────────────────── */
 .studyquest .sq-objectives { border-bottom: 1px solid var(--sq-line); }
 .studyquest .sq-obj-row { display: flex; align-items: center; gap: var(--sq-s3); padding: 10px var(--sq-s2); border-top: 1px solid var(--sq-line); font-size: 13px; }
+.studyquest .sq-course-break { height: var(--sq-s2); border-top: 1px solid var(--sq-line); }
 .studyquest .sq-obj-row.is-clickable { cursor: pointer; border-radius: var(--sq-radius-s); }
 .studyquest .sq-obj-row.is-clickable:hover { background: var(--sq-hover); }
 .studyquest .sq-obj-title { flex: 1; }

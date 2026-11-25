@@ -19,7 +19,7 @@ import type { RunChoice } from "../store/run-choice";
 import { openCompleteMenu } from "./complete-menu";
 import { renderBadges } from "./badges";
 import { drawnFilter } from "../core/character";
-import { renderLevel, renderObjectiveMeta, renderTypeTag, type Navigate } from "./parts";
+import { courseBreaks, renderLevel, renderObjectiveMeta, renderTypeTag, type Navigate } from "./parts";
 import { renderCharacter } from "./sprite";
 
 export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, clock: Clock, app: App, choice: RunChoice): void {
@@ -102,7 +102,12 @@ export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, cl
   }
   for (const r of rows.dated) renderRow(box, r, store, ended, app);
   if (rows.anytime.length) box.createDiv({ cls: "sq-divider", text: "anytime" });
-  for (const r of rows.anytime) renderRow(box, r, store, ended, app);
+  // A small break between courses makes each course's anytime work easy to spot.
+  const breaks = courseBreaks(rows.anytime.map((r) => r.obj.course));
+  rows.anytime.forEach((r, i) => {
+    if (breaks[i]) box.createDiv({ cls: "sq-course-break" });
+    renderRow(box, r, store, ended, app);
+  });
 }
 
 function renderRow(box: HTMLElement, r: HomeRow, store: QuestStore, ended: boolean, app: App) {
