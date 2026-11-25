@@ -14,8 +14,11 @@ export interface RunState {
   id: string;
   name: string;
   start: LocalDate;
-  end: LocalDate;
+  /** Absent while the end date isn't known: the run can't end, close or hold exams. */
+  end?: LocalDate;
   createdAt: string;
+  /** When the dates' 30-minute window started: creation, or when a blank end was first set. */
+  datesSetAt: string;
   /** Active courses by code, in the order added. */
   courses: Map<string, CourseState>;
   /** Set by `quarter_closed`: the frozen result. */

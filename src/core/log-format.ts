@@ -7,8 +7,8 @@ const O: FieldType = "object";
 
 /** Required fields per event type, with their JSON types. */
 const REQUIRED: Record<QuestEvent["type"], Record<string, FieldType>> = {
-  quarter_created: { run: S, name: S, start: S, end: S },
-  quarter_dates_corrected: { run: S, start: S, end: S },
+  quarter_created: { run: S, name: S, start: S },
+  quarter_dates_corrected: { run: S, start: S },
   course_added: { run: S, course: S, name: S, folder: S },
   course_undone: { run: S, course: S },
   objective_added: { obj: S, run: S, course: S, kind: S, title: S, source: S },
@@ -28,6 +28,7 @@ const REQUIRED: Record<QuestEvent["type"], Record<string, FieldType>> = {
 function wellFormed(e: Record<string, unknown>, type: QuestEvent["type"]): boolean {
   if (Number.isNaN(Date.parse(e.t as string))) return false;
   for (const [key, want] of Object.entries(REQUIRED[type])) if (typeof e[key] !== want) return false;
+  if ((type === "quarter_created" || type === "quarter_dates_corrected") && e.end !== undefined && typeof e.end !== "string") return false;
   if (type === "objective_added") {
     if (e.date !== undefined && typeof e.date !== "string") return false;
     if (e.steps !== undefined && !isStringArray(e.steps)) return false;

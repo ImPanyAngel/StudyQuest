@@ -82,3 +82,14 @@ test("parseLog reads character events and checks their shapes", () => {
   ];
   expect(parseLog(lines.map((l) => JSON.stringify(l)).join("\n")).map((e) => e.id)).toEqual(["e_1", "e_2", "e_3", "e_4"]);
 });
+
+test("quarter_created and quarter_dates_corrected parse without end; a non-string end is skipped", () => {
+  const t = '"t":"2026-11-16T10:00:00.000Z"';
+  const text = [
+    `{"id":"e_1",${t},"type":"quarter_created","run":"R","name":"R","start":"2026-11-09"}`,
+    `{"id":"e_2",${t},"type":"quarter_dates_corrected","run":"R","start":"2026-11-09"}`,
+    `{"id":"e_3",${t},"type":"quarter_created","run":"R","name":"R","start":"2026-11-09","end":5}`,
+    `{"id":"e_4",${t},"type":"quarter_dates_corrected","run":"R","start":"2026-11-09","end":null}`,
+  ].join("\n");
+  expect(parseLog(text).map((e) => e.id)).toEqual(["e_1", "e_2"]);
+});

@@ -24,7 +24,7 @@ import {
 } from "./events";
 import { isCourseCode, runIdFromName } from "./ids";
 import { isPrestigeTier } from "./prestige";
-import { emptyState, type ObjectiveState, type State } from "./state";
+import { emptyState, type ObjectiveState, type RunState, type State } from "./state";
 
 const UNDO_WINDOW_MS = 30 * 60_000;
 
@@ -98,17 +98,27 @@ export function replay(events: QuestEvent[]): State {
 
 // ── runs ────────────────────────────────────────────────────────────────
 
-function checkRunDates(start: LocalDate, end: LocalDate): string | null {
-  if (!isLocalDate(start) || !isLocalDate(end)) return "Dates must be valid YYYY-MM-DD dates.";
-  if (daysBetween(start, end) < 7) return "A run must last at least 7 days.";
+/** A run's dates lock 30 minutes after they were set, but never while the end is blank. */
+export function datesLocked(run: RunState, t: string): boolean {
+  return run.end !== undefined && !withinUndoWindow(run.datesSetAt, t);
+}
+
+function checkRunDates(start: LocalDate, end: LocalDate | undefined): string | null {
+  if (!isLocalDate(start) || (end !== undefined && !isLocalDate(end))) return "Dates must be valid YYYY-MM-DD dates.";
+  if (end !== undefined && daysBetween(start, end) < 7) return "A run must last at least 7 days.";
   // Runs may overlap: a side run (e.g. a career roadmap) can span several quarters.
   return null;
 }
 
-function datedObjectivesFit(state: State, run: string, start: LocalDate, end: LocalDate): string | null {
-  const week = examWeek(end);
+function datedObjectivesFit(state: State, run: string, start: LocalDate, end: LocalDate | undefined): string | null {
   for (const o of objectivesOfRun(state, run)) {
     if (!o.date) continue;
+    if (end === undefined) {
+      // No end: assignments may be due whenever, and there's no exam week to hold an exam.
+      if (o.kind === "exam") return `"${o.title}" needs an end date for its exam week.`;
+      continue;
+    }
+    const week = examWeek(end);
     if (o.kind === "assignment" && (o.date < start || o.date > end)) {
       return `"${o.title}" is due on ${o.date}, outside the new dates.`;
     }
@@ -126,18 +136,23 @@ function quarterCreated(state: State, e: QuarterCreated): string | null {
   if (state.runs.has(e.run)) return `A run called "${e.name}" already exists.`;
   const bad = checkRunDates(e.start, e.end);
   if (bad) return bad;
-  state.runs.set(e.run, { id: e.run, name: e.name, start: e.start, end: e.end, createdAt: e.t, courses: new Map(), purchases: new Map() });
+  const run: RunState = { id: e.run, name: e.name, start: e.start, createdAt: e.t, datesSetAt: e.t, courses: new Map(), purchases: new Map() };
+  if (e.end !== undefined) run.end = e.end;
+  state.runs.set(e.run, run);
   return null;
 }
 
 function quarterDatesCorrected(state: State, e: QuarterDatesCorrected): string | null {
   const run = state.runs.get(e.run);
   if (!run) return "Unknown run.";
-  if (!withinUndoWindow(run.createdAt, e.t)) return "The run's dates are locked.";
+  if (datesLocked(run, e.t)) return "The run's dates are locked.";
   const bad = checkRunDates(e.start, e.end) ?? datedObjectivesFit(state, run.id, e.start, e.end);
   if (bad) return bad;
+  // The window starts when a blank end is first filled in.
+  if (run.end === undefined && e.end !== undefined) run.datesSetAt = e.t;
   run.start = e.start;
-  run.end = e.end;
+  if (e.end === undefined) delete run.end;
+  else run.end = e.end;
   return null;
 }
 
@@ -145,7 +160,7 @@ function quarterClosed(state: State, e: QuarterClosed): string | null {
   const run = state.runs.get(e.run);
   if (!run) return "Unknown run.";
   if (run.closed) return "This run is already closed.";
-  if (localDateOf(new Date(e.t)) <= run.end) return "The run hasn't ended yet.";
+  if (run.end === undefined || localDateOf(new Date(e.t)) <= run.end) return "The run hasn't ended yet.";
   if (!Number.isInteger(e.done) || !Number.isInteger(e.total) || e.done < 0 || e.done > e.total) return "Impossible counts.";
   if (!isPrestigeTier(e.tier)) return "Unknown tier.";
   run.closed = { id: e.id, done: e.done, total: e.total, tier: e.tier, at: e.t };
@@ -200,11 +215,14 @@ function objectiveAdded(state: State, e: ObjectiveAdded): string | null {
   }
   if (e.date !== undefined) {
     if (!isLocalDate(e.date)) return "Dates must be valid YYYY-MM-DD dates.";
-    if (e.kind === "assignment" && (e.date < run.start || e.date > run.end)) {
+    if (run.end === undefined) {
+      // No end yet: assignments may be due whenever; exams wait for an exam week.
+      if (e.kind === "exam") return "Set an end date to add exams.";
+    } else if (e.kind === "assignment" && (e.date < run.start || e.date > run.end)) {
       return "An assignment's due date must fall within the run.";
     }
-    const week = examWeek(run.end);
-    if (e.kind === "exam" && (e.date < week.from || e.date > week.to)) {
+    const week = run.end === undefined ? null : examWeek(run.end);
+    if (week && e.kind === "exam" && (e.date < week.from || e.date > week.to)) {
       return "An exam's date must fall within exam week.";
     }
   }

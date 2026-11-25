@@ -50,6 +50,15 @@ export const ev = {
   corrected(run: string, start: LocalDate, end: LocalDate, t: string): QuarterDatesCorrected {
     return { id: id(), t, type: "quarter_dates_corrected", run, start, end };
   },
+  /** A run created with no end date: the event carries no `end` key. */
+  createdOpen(name = Q2.name, start: LocalDate = Q2.start, t = at(0)): QuarterCreated {
+    const r = runIdFromName(name);
+    return { id: id(), t, type: "quarter_created", run: r.ok ? r.value : "", name, start };
+  },
+  /** A date correction that leaves (or makes) the end blank. */
+  correctedOpen(run: string, start: LocalDate, t: string): QuarterDatesCorrected {
+    return { id: id(), t, type: "quarter_dates_corrected", run, start };
+  },
   course(run: string, code: string, t = at(1)): CourseAdded {
     return { id: id(), t, type: "course_added", run, course: code, name: `${code} course`, folder: `${code}/` };
   },

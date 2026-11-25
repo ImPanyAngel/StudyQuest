@@ -146,3 +146,23 @@ test("course undo removes its objectives but keeps their ids reserved", () => {
   expect(s.everObjectiveIds.has(o.obj)).toBe(true);
 });
 
+
+describe("run with no end date", () => {
+  const open = (...extra: QuestEvent[]) => replay([ev.createdOpen(), ev.course(R, "C1", at(1)), ...extra]);
+
+  test("assignments may be due on any date", () => {
+    const s = open();
+    expect(applyEvent(s, ev.objective(R, "C1", "assignment", 1, at(2), { date: "2020-01-01" }))).toBeNull();
+    expect(applyEvent(s, ev.objective(R, "C1", "assignment", 2, at(2), { date: "2035-06-30" }))).toBeNull();
+  });
+
+  test("exams are refused", () => {
+    expect(applyEvent(open(), ev.objective(R, "C1", "exam", 1, at(2), { date: "2027-01-25" }))).toBe("Set an end date to add exams.");
+  });
+
+  test("setting an end refuses if an assignment falls outside", () => {
+    const s = open(ev.objective(R, "C1", "assignment", 1, at(2), { date: "2027-03-01" }));
+    expect(applyEvent(s, ev.corrected(R, Q2.start, Q2.end, at(10)))).toEqual(rejected);
+    expect(s.runs.get(R)!.end).toBeUndefined();
+  });
+});

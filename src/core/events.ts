@@ -32,14 +32,16 @@ export interface QuarterCreated extends Base {
   run: string;
   name: string;
   start: LocalDate;
-  end: LocalDate;
+  /** Absent when the end date isn't known yet. */
+  end?: LocalDate;
 }
 
 export interface QuarterDatesCorrected extends Base {
   type: "quarter_dates_corrected";
   run: string;
   start: LocalDate;
-  end: LocalDate;
+  /** Absent to leave (or make) the end blank. */
+  end?: LocalDate;
 }
 
 export interface CourseAdded extends Base {

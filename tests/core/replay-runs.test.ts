@@ -93,3 +93,52 @@ test("replay never throws on a malformed event", () => {
   expect(() => replay([ev.created(), bad])).not.toThrow();
   expect(replay([ev.created(), bad]).runs.size).toBe(1);
 });
+
+describe("runs with no end date", () => {
+  test("creates a run with no end", () => {
+    const r = replay([ev.createdOpen()]).runs.get(Q2.run)!;
+    expect(r.end).toBeUndefined();
+    expect("end" in r).toBe(false);
+    expect(r.datesSetAt).toBe(at(0));
+  });
+
+  test("a run with no end still needs a valid start", () => {
+    expect(applyEvent(emptyState(), ev.createdOpen("A", "2026-11-31"))).toEqual(expect.any(String));
+  });
+
+  test("no-end run dates stay editable for days", () => {
+    const s = replay([ev.createdOpen(), ev.correctedOpen(Q2.run, "2026-11-10", at(60 * 24 * 5))]);
+    expect(s.runs.get(Q2.run)!.start).toBe("2026-11-10");
+  });
+
+  test("setting the end later starts the 30-minute window then", () => {
+    const s = replay([ev.createdOpen(), ev.corrected(Q2.run, Q2.start, Q2.end, at(600))]);
+    const r = s.runs.get(Q2.run)!;
+    expect(r.end).toBe(Q2.end);
+    expect(r.datesSetAt).toBe(at(600));
+    expect(applyEvent(s, ev.corrected(Q2.run, "2026-11-10", Q2.end, at(629)))).toBeNull();
+    expect(applyEvent(s, ev.corrected(Q2.run, "2026-11-11", Q2.end, at(631)))).toBe("The run's dates are locked.");
+  });
+
+  test("blanking the end within the window is allowed", () => {
+    const r = replay([ev.created(), ev.correctedOpen(Q2.run, Q2.start, at(10))]).runs.get(Q2.run)!;
+    expect(r.end).toBeUndefined();
+    expect("end" in r).toBe(false);
+  });
+
+  test("blanking the end is refused when the run has exams", () => {
+    const s = replay([ev.created(), ev.course(Q2.run, "C1", at(1)), ev.objective(Q2.run, "C1", "exam", 1, at(2), { date: "2027-01-25" })]);
+    expect(applyEvent(s, ev.correctedOpen(Q2.run, Q2.start, at(10)))).toEqual(expect.any(String));
+    expect(s.runs.get(Q2.run)!.end).toBe(Q2.end);
+  });
+
+  test("a no-end run never closes", () => {
+    const s = replay([ev.createdOpen()]);
+    const close: QuestEvent = { id: "e_close", t: "2030-01-01T12:00:00.000Z", type: "quarter_closed", run: Q2.run, done: 0, total: 0, tier: 0 };
+    expect(applyEvent(s, close)).toBe("The run hasn't ended yet.");
+  });
+
+  test("a run with an end records datesSetAt at creation", () => {
+    expect(replay([ev.created()]).runs.get(Q2.run)!.datesSetAt).toBe(at(0));
+  });
+});
