@@ -63,6 +63,11 @@ export function examWeek(end: LocalDate): { from: LocalDate; to: LocalDate } {
   return { from: addDays(end, -7), to: end };
 }
 
+/** "Mon 9 Nov 2026 → Sat 30 Jan 2027", or "… → no end date" while the end isn't known. */
+export function formatRunDates(start: LocalDate, end?: LocalDate): string {
+  return `${formatShort(start)} → ${end === undefined ? "no end date" : formatShort(end)}`;
+}
+
 export function formatShort(d: LocalDate): string {
   const u = toUtc(d);
   return `${WEEKDAYS[u.getUTCDay()]} ${u.getUTCDate()} ${MONTHS[u.getUTCMonth()]} ${u.getUTCFullYear()}`;

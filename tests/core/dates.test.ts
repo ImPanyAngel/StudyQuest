@@ -1,4 +1,4 @@
-import { addDays, daysBetween, examWeek, formatShort, isLocalDate, localDateOf, nextLocalMidnight } from "../../src/core/dates";
+import { addDays, daysBetween, examWeek, formatRunDates, formatShort, isLocalDate, localDateOf, nextLocalMidnight } from "../../src/core/dates";
 import { err, ok } from "../../src/core/result";
 
 test("isLocalDate", () => {
@@ -44,4 +44,9 @@ test("formatShort", () => {
 test("result helpers", () => {
   expect(ok(1)).toEqual({ ok: true, value: 1 });
   expect(err("no")).toEqual({ ok: false, error: "no" });
+});
+
+test("formatRunDates shows no end date when there's no end", () => {
+  expect(formatRunDates("2026-11-09")).toBe("Mon 9 Nov 2026 → no end date");
+  expect(formatRunDates("2026-11-09", "2027-01-30")).toBe("Mon 9 Nov 2026 → Sat 30 Jan 2027");
 });

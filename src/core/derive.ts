@@ -1,8 +1,16 @@
 import { addDays, type LocalDate } from "./dates";
 import { DATED_KINDS } from "./events";
 import type { PrestigeTier } from "./prestige";
-import { withinUndoWindow } from "./replay";
+import { datesLocked, withinUndoWindow } from "./replay";
 import type { ObjectiveState, RunState, State } from "./state";
+
+/** By end date; runs with no end sort after every run that has one. */
+function byEnd(a: RunState, b: RunState): number {
+  if (a.end === b.end) return 0;
+  if (a.end === undefined) return 1;
+  if (b.end === undefined) return -1;
+  return a.end < b.end ? -1 : 1;
+}
 
 const UNDO_WINDOW_MS = 30 * 60_000;
 
@@ -42,13 +50,14 @@ export function isResit(s: State, run: string, course: string): boolean {
 export function currentRun(s: State, today: LocalDate): RunState | null {
   const runs = [...s.runs.values()];
   // Overlapping runs: the one ending soonest (normally the quarter), then earliest start, then name.
+  // A run with no end contains every day from its start, and loses to any run that has one.
   const containing = runs
-    .filter((r) => r.start <= today && today <= r.end)
-    .sort((a, b) => a.end.localeCompare(b.end) || a.start.localeCompare(b.start) || a.name.localeCompare(b.name))[0];
+    .filter((r) => r.start <= today && (r.end === undefined || today <= r.end))
+    .sort((a, b) => byEnd(a, b) || a.start.localeCompare(b.start) || a.name.localeCompare(b.name))[0];
   if (containing) return containing;
   const upcoming = runs.filter((r) => r.start > today).sort((a, b) => (a.start < b.start ? -1 : 1));
   if (upcoming.length) return upcoming[0];
-  const past = runs.filter((r) => r.end < today).sort((a, b) => (a.end > b.end ? -1 : 1));
+  const past = runs.filter((r) => r.end !== undefined && r.end < today).sort((a, b) => byEnd(b, a));
   return past[0] ?? null;
 }
 
@@ -68,7 +77,7 @@ export function runHasExams(s: State, run: string): boolean {
 }
 
 export function runEnded(run: RunState, today: LocalDate): boolean {
-  return today > run.end;
+  return run.end !== undefined && today > run.end;
 }
 
 export function shortName(run: RunState): string {
@@ -146,7 +155,7 @@ export function canUndoCourse(s: State, run: string, code: string, now: Date): b
 }
 
 export function canCorrectRun(run: RunState, now: Date): boolean {
-  return withinUndoWindow(run.createdAt, now.toISOString());
+  return !datesLocked(run, now.toISOString());
 }
 
 export function examsDueForSat(s: State, today: LocalDate): ObjectiveState[] {
@@ -182,7 +191,6 @@ export function stains(s: State, run: string): ObjectiveState[] {
   return [...s.objectives.values()].filter((o) => o.run === run && !o.completed);
 }
 
-const byEnd = (a: RunState, b: RunState) => (a.end < b.end ? -1 : a.end > b.end ? 1 : 0);
 const byStart = (a: RunState, b: RunState) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0);
 
 export function runsDueToClose(s: State, today: LocalDate): RunState[] {

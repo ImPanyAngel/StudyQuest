@@ -93,3 +93,19 @@ test("self check on a closed run's objective is refused as closed", () => {
   const r = planAction(closed, { type: "selfCheck", obj: l2 }, DAY31, ids);
   expect(r).toEqual({ ok: false, error: "This run is closed." });
 });
+
+describe("runs with no end date", () => {
+  test("runsDueToClose skips a no-end run", () => {
+    expect(runsDueToClose(replay([ev.createdOpen(), ev.created("Old", "2026-01-01", "2026-02-01")]), "2030-01-01").map((r) => r.id)).toEqual(["Old"]);
+  });
+
+  test("planDailyCheck never closes a no-end run", () => {
+    expect(planDailyCheck(replay([ev.createdOpen()]), new Date("2030-01-01T08:00:00.000Z"), ids)).toEqual([]);
+  });
+
+  test("hallRuns and unseenPrestige sort no-end runs without throwing", () => {
+    const s = replay([ev.createdOpen("Open", "2026-01-01"), ev.created("Old", "2026-01-01", "2026-02-01", at(-60)), ev.closed("Old", 0, 0, 0, at(0))]);
+    expect(hallRuns(s).open.map((r) => r.id)).toEqual(["Open"]);
+    expect(unseenPrestige(s).map((r) => r.id)).toEqual(["Old"]);
+  });
+});

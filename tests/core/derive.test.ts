@@ -205,3 +205,28 @@ test("examsDueForSat skips closed runs", () => {
   expect(s.runs.get(Q2.run)!.closed).toBeDefined();
   expect(examsDueForSat(s, "2027-02-01")).toEqual([]);
 });
+
+describe("runs with no end date", () => {
+  test("runEnded is false forever without an end", () => {
+    const r = replay([ev.createdOpen()]).runs.get(R)!;
+    expect(runEnded(r, "2099-01-01")).toBe(false);
+  });
+
+  test("currentRun prefers a run with an end over one without, both containing today", () => {
+    expect(currentRun(replay([ev.createdOpen("Open", "2026-11-01"), ev.created()]), "2026-11-16")!.id).toBe(R);
+    expect(currentRun(replay([ev.created(), ev.createdOpen("Open", "2026-11-01")]), "2026-11-16")!.id).toBe(R);
+  });
+
+  test("a no-end run started before today is current", () => {
+    const s = replay([ev.created("P1", "2026-01-01", "2026-02-01"), ev.createdOpen("Open", "2026-03-01")]);
+    expect(currentRun(s, "2030-06-01")!.id).toBe("Open");
+  });
+
+  test("canCorrectRun is true days later without an end, false 31 min after the end was set", () => {
+    const open = replay([ev.createdOpen()]).runs.get(R)!;
+    expect(canCorrectRun(open, min(60 * 24 * 5))).toBe(true);
+    const set = replay([ev.createdOpen(), ev.corrected(R, Q2.start, Q2.end, at(600))]).runs.get(R)!;
+    expect(canCorrectRun(set, min(629))).toBe(true);
+    expect(canCorrectRun(set, min(631))).toBe(false);
+  });
+});

@@ -134,3 +134,26 @@ test("bulk add with a blank prefix uses the type's own name", () => {
   const r = run(base(), { type: "bulkAddObjectives", run: R, course: "C1", kind: "lab", prefix: "  ", from: 1, to: 2 }, min(2));
   expect(r.events.map((e) => (e as { title: string }).title)).toEqual(["Lab 1", "Lab 2"]);
 });
+
+describe("runs with no end date", () => {
+  test("createRun with a blank or missing end writes an event without end", () => {
+    for (const end of ["", undefined]) {
+      const r = run([], { type: "createRun", name: "X", start: Q2.start, end }, min(0));
+      expect(r.error).toBeUndefined();
+      expect("end" in r.events[0]).toBe(false);
+    }
+  });
+
+  test("correctRunDates with a blank end writes an event without end", () => {
+    const r = run([ev.created()], { type: "correctRunDates", run: R, start: Q2.start, end: "" }, min(5));
+    expect(r.error).toBeUndefined();
+    expect("end" in r.events[0]).toBe(false);
+    expect(replay(r.history).runs.get(R)!.end).toBeUndefined();
+  });
+
+  test("adds stay open on a no-end run years later", () => {
+    const h = [ev.createdOpen(), ev.course(R, "C1", at(1))];
+    const r = run(h, { type: "addObjective", run: R, course: "C1", kind: "lecture", title: "L" }, new Date("2031-01-01T08:00:00.000Z"));
+    expect(r.error).toBeUndefined();
+  });
+});

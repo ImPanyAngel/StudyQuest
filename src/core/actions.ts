@@ -12,8 +12,8 @@ import { err, ok, type Result } from "./result";
 import type { State } from "./state";
 
 export type Action =
-  | { type: "createRun"; name: string; start: LocalDate; end: LocalDate }
-  | { type: "correctRunDates"; run: string; start: LocalDate; end: LocalDate }
+  | { type: "createRun"; name: string; start: LocalDate; end?: LocalDate }
+  | { type: "correctRunDates"; run: string; start: LocalDate; end?: LocalDate }
   | { type: "addCourse"; run: string; code: string; name: string; folder: string }
   | { type: "undoCourse"; run: string; code: string }
   | { type: "addObjective"; run: string; course: string; kind: Kind; title: string; date?: LocalDate; steps?: string[]; levels?: string[] }
@@ -80,6 +80,11 @@ export function planDailyCheck(s: State, now: Date, newId: IdFactory): QuestEven
   return [...sats, ...closes];
 }
 
+/** A blank end (a cleared date field) means no end: the event omits the key. */
+function endOf(end: LocalDate | undefined): { end?: LocalDate } {
+  return end ? { end } : {};
+}
+
 function draftsFor(s: State, a: Action, now: Date): Result<Draft[]> {
   const today = localDateOf(now);
   // A closed run is reported as closed; one past its end date but not yet closed, as ended.
@@ -94,10 +99,10 @@ function draftsFor(s: State, a: Action, now: Date): Result<Draft[]> {
       const name = a.name.trim();
       const id = runIdFromName(name);
       if (!id.ok) return id;
-      return ok([{ type: "quarter_created", run: id.value, name, start: a.start, end: a.end }]);
+      return ok([{ type: "quarter_created", run: id.value, name, start: a.start, ...endOf(a.end) }]);
     }
     case "correctRunDates":
-      return ok([{ type: "quarter_dates_corrected", run: a.run, start: a.start, end: a.end }]);
+      return ok([{ type: "quarter_dates_corrected", run: a.run, start: a.start, ...endOf(a.end) }]);
     case "addCourse": {
       if (blocked(a.run)) return err(blocked(a.run)!);
       const bad = folderError(a.folder);
