@@ -1,7 +1,22 @@
 import { formatShort } from "../core/dates";
 import { KIND_NAMES, type Kind } from "../core/events";
 import type { Badge, BadgeId, RunRewards } from "../core/rewards";
+import { err, ok, type Result } from "../core/result";
 import type { ObjectiveState } from "../core/state";
+
+/**
+ * The End date field's value. Empty means no end date. A half-typed date input also reports
+ * an empty value, but flags `badInput`, so it's refused rather than read as blank.
+ */
+export function endDateFrom(value: string, badInput: boolean): Result<string | undefined> {
+  if (badInput) return err("Finish the End date, or clear it to leave the run without one.");
+  return ok(value || undefined);
+}
+
+/** For rows grouped by course: true at the first row of each course after the first. */
+export function courseBreaks(courses: string[]): boolean[] {
+  return courses.map((c, i) => i > 0 && c !== courses[i - 1]);
+}
 
 export type Route =
   | { tab: "home" }

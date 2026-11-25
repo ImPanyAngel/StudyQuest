@@ -21,7 +21,7 @@ import type { CourseFolders } from "../store/course-folders";
 import type { QuestStore } from "../store/quest-store";
 import type { RunChoice } from "../store/run-choice";
 import { renderEvidence } from "./evidence-link";
-import { KIND_LABELS, renderMark, renderObjectiveMeta, renderTypeTag } from "./parts";
+import { endDateFrom, KIND_LABELS, renderMark, renderObjectiveMeta, renderTypeTag } from "./parts";
 import { singleFlight } from "./single-flight";
 
 /** Setup's own UI state, kept on the view so re-renders don't lose typed input. */
@@ -84,11 +84,14 @@ export function renderSetup(
     const row = s1.createDiv({ cls: "sq-form" });
     const name = field(row, "run.name", { placeholder: "Name, e.g. 2026-27 Q2" });
     labelled(row, "Start", field(row, "run.start", { type: "date" }));
-    labelled(row, "End", field(row, "run.end", { type: "date" }));
+    const endInput = field(row, "run.end", { type: "date" });
+    labelled(row, "End", endInput);
     button(row, "Create run", () => {
       const id = runIdFromName(name.value);
-      // A blank End means the end date isn't known yet.
-      return act({ type: "createRun", name: name.value, start: ui.drafts["run.start"] ?? "", end: ui.drafts["run.end"] || undefined }, () => {
+      // A blank End means the end date isn't known yet; a half-typed one is refused.
+      const end = endDateFrom(endInput.value, endInput.validity.badInput);
+      if (!end.ok) return new Notice(end.error);
+      return act({ type: "createRun", name: name.value, start: ui.drafts["run.start"] ?? "", end: end.value }, () => {
         if (id.ok) {
           ui.run = id.value;
           choice.set(id.value);
@@ -112,19 +115,17 @@ export function renderSetup(
   } else if (canCorrectRun(run, now)) {
     const row = s1.createDiv({ cls: "sq-form" });
     labelled(row, "Start", field(row, `fix.${run.id}.start`, { type: "date", value: run.start }));
-    labelled(row, "End", field(row, `fix.${run.id}.end`, { type: "date", value: run.end ?? "" }));
-    button(row, "Save dates", () =>
-      act(
-        {
-          type: "correctRunDates",
-          run: run.id,
-          start: ui.drafts[`fix.${run.id}.start`] ?? run.start,
-          // A cleared End field means no end date.
-          end: (ui.drafts[`fix.${run.id}.end`] ?? run.end) || undefined,
-        },
+    const endInput = field(row, `fix.${run.id}.end`, { type: "date", value: run.end ?? "" });
+    labelled(row, "End", endInput);
+    button(row, "Save dates", () => {
+      // A cleared End field means no end date; a half-typed one is refused.
+      const end = endDateFrom(endInput.value, endInput.validity.badInput);
+      if (!end.ok) return new Notice(end.error);
+      return act(
+        { type: "correctRunDates", run: run.id, start: ui.drafts[`fix.${run.id}.start`] ?? run.start, end: end.value },
         () => clear(`fix.${run.id}.start`, `fix.${run.id}.end`),
-      ),
-    );
+      );
+    });
     s1.createDiv({
       cls: "sq-hint",
       text: run.end === undefined
