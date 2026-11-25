@@ -67,6 +67,7 @@
   margin: var(--sq-s5) 0 var(--sq-s2); font-size: 11px; font-weight: 600; color: var(--sq-muted);
   text-transform: uppercase; letter-spacing: 0.08em;
 }
+.studyquest .sq-section .sq-count { margin-left: var(--sq-s1); color: var(--sq-accent); font-variant-numeric: tabular-nums; letter-spacing: 0; }
 .studyquest .sq-step-title { margin-top: 0; color: var(--sq-accent); }
 .studyquest .sq-divider {
   font-size: 11px; color: var(--sq-faint); padding: var(--sq-s3) var(--sq-s2) var(--sq-s1);

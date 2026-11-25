@@ -42,7 +42,7 @@ export function openCompleteMenu(evt: MouseEvent, obj: ObjectiveState, store: Qu
   } else if (EVIDENCE_KINDS.includes(obj.kind)) {
     menu.addItem((i) =>
       i
-        .setTitle("Pick the file that proves it → done…")
+        .setTitle("Mark Done")
         .setIcon("file-check")
         .onClick(() => new EvidencePicker(app, store, obj).open()),
     );

@@ -50,7 +50,8 @@ export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, cl
   // ── top row ──
   const top = el.createDiv({ cls: "sq-top" });
 
-  const pct = runProgress(s, run.id).pct;
+  const progress = runProgress(s, run.id);
+  const pct = progress.pct;
   const ring = top.createDiv({ cls: "sq-ring" });
   ring.setCssProps({ "--sq-pct": String(pct ?? 0) });
   ring.createDiv({ cls: "sq-ring-value", text: pct === null ? "—" : `${pct}%` });
@@ -90,7 +91,8 @@ export function renderHome(el: HTMLElement, store: QuestStore, nav: Navigate, cl
   renderLevel(side, runRewards(s, run.id));
 
   // ── objectives ──
-  el.createEl("h4", { cls: "sq-section", text: "Objectives" });
+  const heading = el.createEl("h4", { cls: "sq-section", text: "Objectives" });
+  heading.createSpan({ cls: "sq-count", text: `${progress.done}/${progress.total}` });
   const rows = homeRows(s, run.id, today);
   const box = el.createDiv({ cls: "sq-objectives" });
   if (rows.dated.length === 0 && rows.anytime.length === 0) {
