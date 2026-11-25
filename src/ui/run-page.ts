@@ -1,4 +1,4 @@
-import { formatShort } from "../core/dates";
+import { formatRunDates } from "../core/dates";
 import type { App } from "obsidian";
 import { courseObjectives, courseProgress, objectiveLabel, runScore, stains } from "../core/derive";
 import { tierLabel } from "../core/prestige";
@@ -27,7 +27,7 @@ export function renderRunPage(el: HTMLElement, store: QuestStore, route: Extract
   if (closed) title.push(tierLabel(score.tier ?? 0));
   title.push(`Level ${runRewards(s, run.id).level.level}`);
   head.createDiv({ cls: "sq-run-title", text: title.join(" · ") });
-  const sub = [`${formatShort(run.start)} → ${formatShort(run.end)}`, `${score.done} of ${score.total}`];
+  const sub = [formatRunDates(run.start, run.end), `${score.done} of ${score.total}`];
   if (closed) sub.push(stainLabel(stains(s, run.id).length));
   head.createDiv({ cls: "sq-hint", text: sub.join(" · ") });
 

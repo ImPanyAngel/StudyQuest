@@ -1,6 +1,6 @@
 import { Notice, type App } from "obsidian";
 import type { Action } from "../core/actions";
-import { examWeek, formatShort, localDateOf, type Clock } from "../core/dates";
+import { examWeek, formatRunDates, formatShort, localDateOf, type Clock } from "../core/dates";
 import {
   canCorrectRun,
   canUndoCourse,
@@ -87,7 +87,8 @@ export function renderSetup(
     labelled(row, "End", field(row, "run.end", { type: "date" }));
     button(row, "Create run", () => {
       const id = runIdFromName(name.value);
-      return act({ type: "createRun", name: name.value, start: ui.drafts["run.start"] ?? "", end: ui.drafts["run.end"] ?? "" }, () => {
+      // A blank End means the end date isn't known yet.
+      return act({ type: "createRun", name: name.value, start: ui.drafts["run.start"] ?? "", end: ui.drafts["run.end"] || undefined }, () => {
         if (id.ok) {
           ui.run = id.value;
           choice.set(id.value);
@@ -95,7 +96,7 @@ export function renderSetup(
         clear("run.name", "run.start", "run.end");
       });
     });
-    s1.createDiv({ cls: "sq-hint", text: "Dates come from the university calendar. They lock 30 minutes after you create the run." });
+    s1.createDiv({ cls: "sq-hint", text: "Dates come from the university calendar. Leave End blank if you don't know it yet. Dates lock 30 minutes after the end is set." });
     return;
   }
 
@@ -103,31 +104,37 @@ export function renderSetup(
   const closed = !!run.closed;
   // A closed run is frozen: no forms and no undo, whatever the clock says.
   const ended = closed || runEnded(run, today);
-  const week = examWeek(run.end);
+  const week = run.end === undefined ? null : examWeek(run.end);
   if (closed) {
     const score = runScore(s, run.id);
     const pct = score.pct === null ? "—" : `${score.pct}%`;
-    s1.createDiv({ cls: "sq-line", text: `${formatShort(run.start)} → ${formatShort(run.end)} · closed · ${pct} · ${tierLabel(score.tier ?? 0)}` });
+    s1.createDiv({ cls: "sq-line", text: `${formatRunDates(run.start, run.end)} · closed · ${pct} · ${tierLabel(score.tier ?? 0)}` });
   } else if (canCorrectRun(run, now)) {
     const row = s1.createDiv({ cls: "sq-form" });
     labelled(row, "Start", field(row, `fix.${run.id}.start`, { type: "date", value: run.start }));
-    labelled(row, "End", field(row, `fix.${run.id}.end`, { type: "date", value: run.end }));
+    labelled(row, "End", field(row, `fix.${run.id}.end`, { type: "date", value: run.end ?? "" }));
     button(row, "Save dates", () =>
       act(
         {
           type: "correctRunDates",
           run: run.id,
           start: ui.drafts[`fix.${run.id}.start`] ?? run.start,
-          end: ui.drafts[`fix.${run.id}.end`] ?? run.end,
+          // A cleared End field means no end date.
+          end: (ui.drafts[`fix.${run.id}.end`] ?? run.end) || undefined,
         },
         () => clear(`fix.${run.id}.start`, `fix.${run.id}.end`),
       ),
     );
-    s1.createDiv({ cls: "sq-hint", text: `Editable for ${minutesLeft(run.createdAt)} more min, then locked.` });
+    s1.createDiv({
+      cls: "sq-hint",
+      text: run.end === undefined
+        ? "No end date yet. Dates stay editable until you set one."
+        : `Editable for ${minutesLeft(run.datesSetAt)} more min, then locked.`,
+    });
   } else {
-    s1.createDiv({ cls: "sq-line", text: `${formatShort(run.start)} → ${formatShort(run.end)} · locked` });
+    s1.createDiv({ cls: "sq-line", text: `${formatRunDates(run.start, run.end)} · locked` });
   }
-  s1.createDiv({ cls: "sq-hint", text: `Exam week: ${formatShort(week.from)} → ${formatShort(week.to)}` });
+  if (week) s1.createDiv({ cls: "sq-hint", text: `Exam week: ${formatShort(week.from)} → ${formatShort(week.to)}` });
   if (closed) s1.createDiv({ cls: "sq-hint", text: "This run is closed. Its record is final." });
   else if (ended) s1.createDiv({ cls: "sq-hint is-warning", text: "This run has ended. Nothing more can be added." });
 
@@ -211,20 +218,25 @@ export function renderSetup(
     ui.drafts["obj.kind"] = k;
     rerender();
   });
-  field(add, "obj.title", { placeholder: "Title, e.g. Assignment 2" });
-  if (DATED_KINDS.includes(kind)) {
-    labelled(add, kind === "exam" ? "Exam date" : "Due date", field(add, "obj.date", { type: "date" }));
+  // No end date means no exam week, so there's nowhere to put an exam yet.
+  if (kind === "exam" && !week) {
+    add.createSpan({ cls: "sq-hint", text: "Set an end date to add exams." });
+  } else {
+    field(add, "obj.title", { placeholder: "Title, e.g. Assignment 2" });
+    if (DATED_KINDS.includes(kind)) {
+      labelled(add, kind === "exam" ? "Exam date" : "Due date", field(add, "obj.date", { type: "date" }));
+    }
+    if (kind === "reading") {
+      labelled(add, "Levels", field(add, "obj.levels", { placeholder: "Chapter, or Course, Chapter", value: "Chapter" }));
+    }
+    button(add, "Add objective", () => {
+      const a: Action = { type: "addObjective", run: run.id, course, kind, title: ui.drafts["obj.title"] ?? "" };
+      if (DATED_KINDS.includes(kind)) a.date = ui.drafts["obj.date"] ?? "";
+      if (kind === "reading") a.levels = (ui.drafts["obj.levels"] ?? "Chapter").split(",");
+      return act(a, () => clear("obj.title", "obj.date", "obj.levels"));
+    });
   }
-  if (kind === "reading") {
-    labelled(add, "Levels", field(add, "obj.levels", { placeholder: "Chapter, or Course, Chapter", value: "Chapter" }));
-  }
-  button(add, "Add objective", () => {
-    const a: Action = { type: "addObjective", run: run.id, course, kind, title: ui.drafts["obj.title"] ?? "" };
-    if (DATED_KINDS.includes(kind)) a.date = ui.drafts["obj.date"] ?? "";
-    if (kind === "reading") a.levels = (ui.drafts["obj.levels"] ?? "Chapter").split(",");
-    return act(a, () => clear("obj.title", "obj.date", "obj.levels"));
-  });
-  if (kind === "exam") s3.createDiv({ cls: "sq-hint", text: `Exam dates must fall in exam week (${formatShort(week.from)} → ${formatShort(week.to)}). Exams complete themselves as SAT once the date passes.` });
+  if (kind === "exam" && week) s3.createDiv({ cls: "sq-hint", text: `Exam dates must fall in exam week (${formatShort(week.from)} → ${formatShort(week.to)}). Exams complete themselves as SAT once the date passes.` });
 
   // Bulk add
   const bulkDraft = ui.drafts["bulk.kind"] as Kind | undefined;

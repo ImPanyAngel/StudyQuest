@@ -29,7 +29,7 @@ export function renderHall(el: HTMLElement, store: QuestStore, nav: Navigate, cl
     meta.createSpan({ cls: "sq-card-pct", text: score.pct === null ? "—" : `${score.pct}%` });
     meta.createSpan({ cls: "sq-card-level", text: `Lv ${runRewards(s, r.id).level.level}` });
     if (live) {
-      meta.createSpan({ cls: "sq-hint", text: r.start > today ? `starts ${formatShort(r.start)}` : `ends ${formatShort(r.end)}` });
+      meta.createSpan({ cls: "sq-hint", text: r.start > today ? `starts ${formatShort(r.start)}` : r.end ? `ends ${formatShort(r.end)}` : "no end date" });
     } else {
       meta.createSpan({ cls: "sq-card-tier", text: tierLabel(score.tier ?? 0) });
       const n = stains(s, r.id).length;
